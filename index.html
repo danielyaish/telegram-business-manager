@@ -1,0 +1,2002 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>מנהל עסקי</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  :root{
+    --bg:#f0f4f0;
+    --surface:#ffffff;
+    --surface2:#f7faf7;
+    --surface3:#eef3ee;
+    --text:#1a2e1a;
+    --text2:#3d5a3d;
+    --hint:#7a9a7a;
+    --btn:#1a6b2a;
+    --btn-light:#2d8a40;
+    --btn-text:#ffffff;
+    --green:#1a6b2a;
+    --green-light:#e8f5e9;
+    --yellow:#b45309;
+    --red:#b91c1c;
+    --orange:#c2410c;
+    --border:#dce8dc;
+    --border2:#c5d9c5;
+    --shadow:0 1px 3px rgba(26,107,42,0.08),0 4px 16px rgba(26,107,42,0.06);
+    --shadow-sm:0 1px 2px rgba(26,107,42,0.06);
+    --mono:'IBM Plex Mono',monospace;
+    --font:'Heebo',sans-serif;
+    --radius:14px;
+    --radius-sm:10px;
+  }
+  body.dark-mode{
+    --bg:#0d1a0f;
+    --surface:#132016;
+    --surface2:#1a2e1e;
+    --surface3:#1f3524;
+    --text:#d4e8d4;
+    --text2:#a8c8a8;
+    --hint:#5a8a5a;
+    --btn:#2d8a40;
+    --btn-light:#3aa855;
+    --btn-text:#ffffff;
+    --green:#4ade80;
+    --green-light:rgba(45,138,64,0.15);
+    --yellow:#fbbf24;
+    --red:#f87171;
+    --orange:#fb923c;
+    --border:rgba(45,138,64,0.15);
+    --border2:rgba(45,138,64,0.25);
+    --shadow:0 1px 3px rgba(0,0,0,0.3),0 4px 16px rgba(0,0,0,0.2);
+    --shadow-sm:0 1px 2px rgba(0,0,0,0.2);
+  }
+  body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;min-height:100vh;padding-bottom:70px;-webkit-font-smoothing:antialiased;transition:background 0.3s ease,color 0.3s ease}
+  .card,.metric-card,.overlay-sheet,.bottom-nav,.header,.form-input,.btn-ghost{transition:background 0.3s ease,border-color 0.3s ease,color 0.3s ease !important}
+  body.dark-mode .star-card{background:linear-gradient(135deg,#0d2a12,#0a1f0d) !important}
+  body.dark-mode .form-input{background:var(--surface2);color:var(--text)}
+  body.dark-mode .btn-ghost{background:var(--surface2);color:var(--text)}
+  body.dark-mode .btn-sm{background:var(--surface2);color:var(--text2)}
+  body.dark-mode .overlay-sheet{background:var(--surface)}
+  body.dark-mode .bottom-nav{background:var(--surface)}
+  body.dark-mode .header{background:var(--surface)}
+  body.dark-mode input,body.dark-mode textarea,body.dark-mode select{background:var(--surface2) !important;color:var(--text) !important;border-color:var(--border2) !important}
+  body.dark-mode .b-active{background:rgba(74,222,128,0.08);color:#4ade80;border-color:rgba(74,222,128,0.3)}
+  body.dark-mode .b-done{background:rgba(90,138,90,0.08);color:var(--hint)}
+  body.dark-mode .b-paused{background:rgba(251,191,36,0.08);color:var(--yellow)}
+  body.dark-mode .b-bot{background:rgba(45,138,64,0.1);color:#4ade80;border-color:rgba(45,138,64,0.3)}
+  body.dark-mode .b-group{background:rgba(58,168,85,0.1);color:#6ee7a0;border-color:rgba(58,168,85,0.3)}
+  body.dark-mode .wiz-sel{background:rgba(45,138,64,0.2) !important;color:#4ade80 !important}
+  .app-wrapper{max-width:520px;margin:0 auto;position:relative;min-height:100vh;background:var(--bg);box-shadow:0 0 40px rgba(0,0,0,0.12)}
+  /* ── Header ── */
+  .header{background:#fff;padding:14px 18px 12px;position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;max-width:520px;margin:0 auto;width:100%;box-shadow:var(--shadow-sm)}
+  .header-title{font-size:17px;font-weight:700;color:var(--btn);letter-spacing:-0.3px}
+  .rate-chip{background:var(--green-light);border:1px solid var(--border2);border-radius:20px;padding:5px 12px;font-size:11px;color:var(--btn);font-family:var(--mono);display:flex;align-items:center;gap:6px;font-weight:500}
+  .rate-dot{width:6px;height:6px;border-radius:50%;background:var(--btn);animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+  .rate-stale .rate-dot{background:var(--yellow)}
+  /* ── Screens ── */
+  .screen{display:none;padding:16px 14px 10px;animation:fadeIn 0.2s ease}
+  .screen.active{display:block}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+  /* ── Bottom Nav ── */
+  .bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;background:#fff;border-top:1px solid var(--border);display:flex;align-items:center;padding:6px 6px max(10px,env(safe-area-inset-bottom));z-index:200;box-shadow:0 -2px 16px rgba(26,107,42,0.1);gap:2px;overflow:hidden}
+  /* פס המחוון המחליק */
+  .nav-indicator{position:absolute;bottom:max(10px,env(safe-area-inset-bottom));height:3px;background:var(--btn);border-radius:2px;width:32px;transition:left 0.35s cubic-bezier(0.4,0,0.2,1);pointer-events:none}
+  .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:6px 2px 4px;border-radius:14px;transition:transform 0.18s ease;position:relative}
+  .nav-item:active{transform:scale(0.88)}
+  .nav-icon-wrap{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative;transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1),background 0.3s ease}
+  .nav-item.active .nav-icon-wrap{background:var(--btn);transform:translateY(-4px) scale(1.06)}
+  .nav-icon{font-size:18px;line-height:1;position:relative;z-index:1;transition:transform 0.25s ease}
+  .nav-item.active .nav-icon{transform:scale(1.05)}
+  /* תיקון: פילטר רק על אייקון שאינו אמוג'י — משתמשים ב-mix-blend-mode */
+  .nav-item.active .nav-icon-wrap .nav-icon{filter:none}
+  .nav-icon-bg{position:absolute;inset:0;border-radius:50%;background:var(--btn);opacity:0;transition:opacity 0.3s ease}
+  .nav-item.active .nav-icon-bg{opacity:1}
+  .nav-icon-overlay{position:absolute;inset:0;border-radius:50%;background:#fff;opacity:0;mix-blend-mode:screen;transition:opacity 0.3s ease;pointer-events:none}
+  .nav-label{font-size:9px;color:var(--hint);font-weight:600;transition:color 0.25s ease;letter-spacing:0.2px}
+  .nav-item.active .nav-label{color:var(--btn)}
+  /* ── Cards ── */
+  .card{background:var(--surface);border-radius:var(--radius);padding:16px;margin-bottom:12px;border:1px solid var(--border);box-shadow:var(--shadow-sm)}
+  .metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+  .metric-card{background:var(--surface);border-radius:var(--radius-sm);padding:14px;border:1px solid var(--border);box-shadow:var(--shadow-sm)}
+  .metric-label{font-size:10px;color:var(--hint);margin-bottom:5px;letter-spacing:0.3px;font-weight:600;text-transform:uppercase}
+  .metric-val{font-size:20px;font-weight:700;font-family:var(--mono);line-height:1.1;letter-spacing:-0.5px;color:var(--text)}
+  .metric-sub{font-size:10px;margin-top:4px;color:var(--hint)}
+  .up{color:var(--green)} .down{color:var(--red)} .warn{color:var(--yellow)}
+  /* ── Goal Bar ── */
+  .goal-bar-bg{height:8px;background:var(--surface3);border-radius:4px;overflow:hidden;margin:8px 0;border:1px solid var(--border)}
+  .goal-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--btn),var(--btn-light));transition:width 1s cubic-bezier(0.4,0,0.2,1)}
+  /* ── Star card ── */
+  .star-card{background:linear-gradient(135deg,#1a6b2a,#2d8a40);border:none;border-radius:var(--radius);padding:18px;margin-bottom:12px;position:relative;overflow:hidden;box-shadow:0 4px 20px rgba(26,107,42,0.25)}
+  .star-card *{color:#fff !important}
+  .star-card::before{content:'';position:absolute;top:-20px;left:-20px;width:120px;height:120px;background:rgba(255,255,255,0.06);border-radius:50%}
+  /* ── Top3 ── */
+  .rank-badge{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+  .r1{background:rgba(180,131,0,0.12);color:#92680a}
+  .r2{background:rgba(100,116,139,0.1);color:#64748b}
+  .r3{background:rgba(120,80,40,0.1);color:#7c5532}
+  /* ── Buttons ── */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:11px 16px;border-radius:var(--radius-sm);border:none;cursor:pointer;font-family:var(--font);font-size:13px;font-weight:600;transition:all 0.18s}
+  .btn:active{opacity:0.8;transform:scale(0.97)}
+  .btn-primary{background:var(--btn);color:#fff;width:100%;margin-bottom:10px;box-shadow:0 2px 8px rgba(26,107,42,0.25)}
+  .btn-ghost{background:var(--surface2);color:var(--text);width:100%;margin-bottom:8px;border:1px solid var(--border2)}
+  .btn-danger{background:#fef2f2;color:var(--red);border:1px solid #fecaca}
+  .btn-sm{padding:6px 12px;font-size:11px;border-radius:8px;background:var(--surface2);color:var(--text2);border:1px solid var(--border);font-weight:500}
+  /* ── Status badges ── */
+  .badge{font-size:10px;padding:3px 10px;border-radius:20px;border:1px solid;white-space:nowrap;font-weight:600}
+  .b-active{border-color:#86efac;color:#166534;background:#f0fdf4}
+  .b-done{border-color:#d1d5db;color:#6b7280;background:#f9fafb}
+  .b-paused{border-color:#fde68a;color:#92400e;background:#fffbeb}
+  .b-bot{border-color:#bbf7d0;color:#166534;background:#f0fdf4}
+  .b-group{border-color:#a7f3d0;color:#065f46;background:#ecfdf5}
+  /* ── Forms ── */
+  .form-group{margin-bottom:16px}
+  .form-label{font-size:11px;color:var(--hint);margin-bottom:7px;display:block;letter-spacing:0.3px;font-weight:600}
+  .form-input{width:100%;background:#fff;border:1.5px solid var(--border2);border-radius:var(--radius-sm);padding:11px 14px;color:var(--text);font-family:var(--font);font-size:14px;outline:none;transition:border-color 0.2s,box-shadow 0.2s}
+  .form-input:focus{border-color:var(--btn);box-shadow:0 0 0 3px rgba(26,107,42,0.1)}
+  .form-select{appearance:none;-webkit-appearance:none}
+  .currency-toggle{display:flex;gap:8px;margin-top:6px}
+  .ctog-btn{flex:1;padding:9px;background:#fff;border:1.5px solid var(--border2);border-radius:var(--radius-sm);color:var(--hint);font-family:var(--font);font-size:12px;cursor:pointer;transition:all 0.2s;text-align:center;font-weight:600}
+  .ctog-btn.active{background:var(--btn);color:#fff;border-color:var(--btn);box-shadow:0 2px 8px rgba(26,107,42,0.2)}
+  /* ── Pay progress bar ── */
+  .pay-bar-bg{height:6px;background:var(--surface3);border-radius:3px;margin-top:10px;overflow:hidden;border:1px solid var(--border)}
+  .pay-bar-fill{height:100%;border-radius:3px;background:var(--btn);transition:width 0.6s cubic-bezier(0.4,0,0.2,1)}
+  /* ── Divider ── */
+  .divider{height:0.5px;background:var(--border);margin:10px 0}
+  /* ── Section header ── */
+  .section-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid var(--btn)}
+  .section-title{font-size:16px;font-weight:700;color:var(--btn)}
+  /* ── History dots ── */
+  .h-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px}
+  .hd-add{background:var(--green)} .hd-pay{background:var(--btn)} .hd-edit{background:var(--yellow)} .hd-del{background:var(--red)}
+  /* ── Toast ── */
+  .toast{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:var(--surface);border:0.5px solid var(--border);border-radius:10px;padding:10px 20px;font-size:13px;z-index:999;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap}
+  .toast.show{opacity:1}
+  /* ── Loading ── */
+  .loading{text-align:center;padding:40px;color:var(--hint);font-size:13px}
+  .spinner{width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--btn);border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 12px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  /* ── Tips ── */
+  .tip-row{display:flex;gap:10px;padding:8px 0;border-bottom:0.5px solid rgba(255,255,255,0.04)}
+  .tip-row:last-child{border-bottom:none}
+  .tip-action{display:inline-block;margin-top:4px;font-size:11px;color:var(--btn);cursor:pointer}
+  /* ── Overlay form ── */
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:300;display:none;align-items:flex-end}
+  .overlay.open{display:flex}
+  .overlay-sheet{background:#f7faf7;border-radius:22px 22px 0 0;padding:20px 18px max(24px,env(safe-area-inset-bottom));width:100%;max-height:88vh;overflow-y:auto;animation:slideUp 0.28s cubic-bezier(0.4,0,0.2,1);border-top:3px solid var(--btn)}
+  @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+  .overlay-handle{width:40px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 18px}
+  .overlay-title{font-size:17px;font-weight:700;margin-bottom:18px;color:var(--btn)}
+  /* ── Wizard ── */
+  .wiz-sel{border-color:var(--btn) !important;background:var(--green-light) !important;color:var(--btn) !important}
+  /* ── AI Chat ── */
+  .ai-msg{padding:10px 12px;border-radius:12px;margin-bottom:8px;font-size:13px;line-height:1.6;max-width:90%}
+  .ai-user{background:var(--btn);color:#fff;margin-right:auto;border-radius:12px 12px 4px 12px}
+  .ai-bot{background:var(--surface);border:0.5px solid var(--border);margin-left:auto;border-radius:12px 12px 12px 4px}
+  .ai-loading{display:flex;gap:4px;align-items:center;padding:10px 12px}
+  .ai-dot{width:6px;height:6px;border-radius:50%;background:var(--hint);animation:bounce 1s infinite}
+  .ai-dot:nth-child(2){animation-delay:0.2s}
+  .ai-dot:nth-child(3){animation-delay:0.4s}
+  @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  /* ── Confirm modal ── */
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:400;display:none;align-items:center;justify-content:center;padding:20px}
+  .modal.open{display:flex}
+  .modal-box{background:var(--surface);border-radius:16px;padding:20px;width:100%;max-width:320px;border:0.5px solid var(--border)}
+  .modal-title{font-size:16px;font-weight:600;margin-bottom:8px}
+  .modal-text{font-size:13px;color:var(--hint);margin-bottom:20px;line-height:1.5}
+  .modal-btns{display:flex;gap:10px}
+  .modal-btns .btn{flex:1;margin:0}
+  /* ── Report chart wrapper ── */
+  .chart-wrap{position:relative;width:100%;height:200px}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="app-wrapper">
+<div class="header">
+  <div>
+    <div class="header-title">מנהל עסקי 💼</div>
+    <div id="greetingText" style="font-size:11px;color:var(--hint);margin-top:1px"></div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <button id="darkToggle" onclick="toggleDark()" style="width:36px;height:36px;border-radius:50%;border:1.5px solid var(--border2);background:var(--surface2);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all 0.25s ease" title="מצב לילה">🌙</button>
+    <div class="rate-chip" id="rateChip">
+      <div class="rate-dot"></div>
+      <span id="rateText">טוען...</span>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN: DASHBOARD
+══════════════════════════════════════════════ -->
+<div id="screen-home" class="screen active">
+  <div id="dashContent"><div class="loading"><div class="spinner"></div>טוען נתונים...</div></div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN: PROJECTS
+══════════════════════════════════════════════ -->
+<div id="screen-projects" class="screen">
+  <div class="section-hdr">
+    <div class="section-title">פרויקטים</div>
+    <button class="btn btn-sm" onclick="openAddProject()">+ הוסף</button>
+  </div>
+  <div style="display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:4px">
+    <button class="btn btn-sm active" id="filt-all" onclick="filterProjects('all',this)">הכל</button>
+    <button class="btn btn-sm" id="filt-bot" onclick="filterProjects('bot',this)">בוטים 🤖</button>
+    <button class="btn btn-sm" id="filt-group" onclick="filterProjects('group',this)">קבוצות 👥</button>
+    <button class="btn btn-sm" id="filt-active" onclick="filterProjects('status-active',this)">פעיל</button>
+    <button class="btn btn-sm" id="filt-done" onclick="filterProjects('status-done',this)">הושלם</button>
+  </div>
+  <div id="projectsList"><div class="loading"><div class="spinner"></div>טוען...</div></div>
+  <div id="projectsPager" style="display:flex;gap:8px;justify-content:center;margin-top:8px"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN: CLIENTS
+══════════════════════════════════════════════ -->
+<div id="screen-clients" class="screen">
+  <div class="section-hdr">
+    <div class="section-title">לקוחות 👤</div>
+    <button class="btn btn-sm" onclick="openAddClient()">+ הוסף</button>
+  </div>
+  <div id="clientsList"><div class="loading"><div class="spinner"></div>טוען...</div></div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN: RECURRING
+══════════════════════════════════════════════ -->
+<div id="screen-recurring" class="screen">
+  <div class="section-hdr">
+    <div class="section-title">הוצאות קבועות 🔄</div>
+    <button class="btn btn-sm" onclick="openAddRecurring()">+ הוסף</button>
+  </div>
+  <div id="recurringContent"><div class="loading"><div class="spinner"></div>טוען...</div></div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN: HISTORY
+══════════════════════════════════════════════ -->
+<div id="screen-history" class="screen">
+  <div class="section-hdr">
+    <div class="section-title">היסטוריה 📋</div>
+    <select class="form-input form-select" style="width:auto;padding:6px 10px;font-size:12px" onchange="loadHistory(1,this.value)">
+      <option value="">הכל</option>
+      <option value="add">הוספות</option>
+      <option value="edit">עריכות</option>
+      <option value="delete">מחיקות</option>
+      <option value="payment">תשלומים</option>
+    </select>
+  </div>
+  <div id="historyList"><div class="loading"><div class="spinner"></div>טוען...</div></div>
+  <div id="historyPager" style="display:flex;gap:8px;justify-content:center;margin-top:8px"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN: REPORTS
+══════════════════════════════════════════════ -->
+<div id="screen-reports" class="screen">
+  <div class="section-hdr"><div class="section-title">דוחות 📊</div></div>
+  <div style="display:flex;gap:8px;margin-bottom:16px">
+    <button class="btn btn-sm" onclick="loadReport('weekly',this)">שבועי</button>
+    <button class="btn btn-sm active" id="rep-monthly" onclick="loadReport('monthly',this)">חודשי</button>
+    <button class="btn btn-sm" onclick="loadReport('quarterly',this)">רבעוני</button>
+  </div>
+  <div id="reportContent"><div class="loading"><div class="spinner"></div>טוען...</div></div>
+</div>
+
+<!-- SCREEN: AI ADVISOR -->
+<div id="screen-ai" class="screen">
+  <div class="section-hdr">
+    <div class="section-title">יועץ AI 🤖</div>
+  </div>
+  <div style="background:linear-gradient(135deg,#2a2a50,#1e2a45);border-radius:14px;padding:14px;margin-bottom:12px;border:0.5px solid rgba(91,110,245,0.3)">
+    <div style="font-size:12px;color:var(--hint);line-height:1.6">
+      💡 היועץ מכיר את הנתונים שלך — שאל אותו על תמחור, ROI, לקוחות, אסטרטגיה ועוד.
+    </div>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px" id="aiSuggestions">
+    <button class="btn btn-sm" onclick="askAI('האם אני מתמחר נכון את הפרויקטים שלי?')" >💰 תמחור נכון?</button>
+    <button class="btn btn-sm" onclick="askAI('מה הפרויקט הכי כדאי לי להתמקד בו?')">⭐ על מה להתמקד?</button>
+    <button class="btn btn-sm" onclick="askAI('האם היעד החודשי שלי ריאלי?')" >🎯 היעד ריאלי?</button>
+    <button class="btn btn-sm" onclick="askAI('איך אני יכול להגדיל את הרווחים שלי?')">📈 הגדל רווחים</button>
+    <button class="btn btn-sm" onclick="askAI('מה לעשות עם לקוח שלא משלם?')" >💳 לקוח לא משלם</button>
+    <button class="btn btn-sm" onclick="askAI('מתי כדאי לי להעלות מחירים?')">🔝 העלאת מחירים</button>
+  </div>
+  <div id="aiMessages" style="margin-bottom:12px;max-height:400px;overflow-y:auto"></div>
+  <div style="display:flex;gap:8px;position:sticky;bottom:70px">
+    <input class="form-input" id="aiInput" placeholder="שאל את היועץ..." style="flex:1" onkeydown="if(event.key==='Enter')sendAI()">
+    <button class="btn btn-primary" style="width:auto;padding:10px 16px;margin:0" onclick="sendAI()">שלח ↗</button>
+  </div>
+</div>
+
+<!-- Bottom Nav -->
+<div class="bottom-nav" id="bottomNav">
+  <div class="nav-indicator" id="navIndicator"></div>
+  <div class="nav-item active" id="nav-home" onclick="gotoScreen('home')">
+    <div class="nav-icon-wrap"><div class="nav-icon-bg"></div><div class="nav-icon">📊</div></div>
+    <div class="nav-label">דשבורד</div>
+  </div>
+  <div class="nav-item" id="nav-projects" onclick="gotoScreen('projects')">
+    <div class="nav-icon-wrap"><div class="nav-icon-bg"></div><div class="nav-icon">🤖</div></div>
+    <div class="nav-label">פרויקטים</div>
+  </div>
+  <div class="nav-item" id="nav-clients" onclick="gotoScreen('clients')">
+    <div class="nav-icon-wrap"><div class="nav-icon-bg"></div><div class="nav-icon">👤</div></div>
+    <div class="nav-label">לקוחות</div>
+  </div>
+  <div class="nav-item" id="nav-recurring" onclick="gotoScreen('recurring')">
+    <div class="nav-icon-wrap"><div class="nav-icon-bg"></div><div class="nav-icon">🔄</div></div>
+    <div class="nav-label">קבועות</div>
+  </div>
+  <div class="nav-item" id="nav-history" onclick="gotoScreen('history')">
+    <div class="nav-icon-wrap"><div class="nav-icon-bg"></div><div class="nav-icon">📋</div></div>
+    <div class="nav-label">היסטוריה</div>
+  </div>
+  <div class="nav-item" id="nav-reports" onclick="gotoScreen('reports')">
+    <div class="nav-icon-wrap"><div class="nav-icon-bg"></div><div class="nav-icon">📈</div></div>
+    <div class="nav-label">דוחות</div>
+  </div>
+</div>
+
+<!-- ═══════ OVERLAYS ═══════ -->
+<!-- Add Project -->
+<div class="overlay" id="overlayAddProject">
+  <div class="overlay-sheet">
+    <div class="overlay-handle"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div class="overlay-title" style="margin:0">הוספת פרויקט ➕</div>
+      <button class="btn btn-sm btn-danger" onclick="closeOverlay('overlayAddProject')">ביטול ❌</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">📂 קטגוריה</label>
+      <div style="display:flex;gap:8px">
+        <button class="ctog-btn active" id="cat-bot" onclick="setCat('bot')">בוט 🤖</button>
+        <button class="ctog-btn" id="cat-group" onclick="setCat('group')">קבוצה 👥</button>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label" id="nameLabel">✏️ שם הבוט</label><input class="form-input" id="projName" placeholder="הזן שם..."></div>
+    <div class="form-group">
+      <label class="form-label">👤 לקוח (אופציונלי)</label>
+      <select class="form-input form-select" id="projClient"><option value="">ללא לקוח</option></select>
+    </div>
+    <div class="form-group"><label class="form-label">👥 כמות משתמשים</label><input class="form-input" id="projUsers" type="number" placeholder="0" min="0"></div>
+    <div class="form-group">
+      <label class="form-label">💱 מטבע</label>
+      <div class="currency-toggle">
+        <button class="ctog-btn active" id="cur-usd" onclick="setCur('USD')">$ דולר</button>
+        <button class="ctog-btn" id="cur-ils" onclick="setCur('ILS')">₪ שקל</button>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">💸 עלות הפרויקט</label><input class="form-input" id="projCost" type="number" placeholder="0"></div>
+    <div class="form-group"><label class="form-label">💰 מחיר מכירה מוסכם</label><input class="form-input" id="projRevTotal" type="number" placeholder="0"></div>
+    <div class="form-group">
+      <label class="form-label">🔄 סטטוס</label>
+      <select class="form-input form-select" id="projStatus">
+        <option value="active">בתהליך 🔄</option>
+        <option value="done">הושלם ✅</option>
+        <option value="paused">מושהה ⏸</option>
+      </select>
+    </div>
+    <div class="form-group"><label class="form-label">📅 דדליין (אופציונלי)</label><input class="form-input" id="projDeadline" type="date"></div>
+    <div class="form-group"><label class="form-label">📝 הערות</label><textarea class="form-input" id="projNotes" rows="2" placeholder="הערות חופשיות..."></textarea></div>
+    <button class="btn btn-primary" onclick="submitProject()">שמור פרויקט 💾</button>
+  </div>
+</div>
+
+<!-- Add Payment -->
+<div class="overlay" id="overlayAddPayment">
+  <div class="overlay-sheet">
+    <div class="overlay-handle"></div>
+    <div class="overlay-title">עדכון תשלום 💳</div>
+    <input type="hidden" id="payProjId">
+    <div class="form-group"><label class="form-label">סכום</label><input class="form-input" id="payAmount" type="number" placeholder="0"></div>
+    <div class="form-group">
+      <label class="form-label">מטבע</label>
+      <div class="currency-toggle">
+        <button class="ctog-btn active" id="payCur-usd" onclick="setPayCur('USD')">$ דולר</button>
+        <button class="ctog-btn" id="payCur-ils" onclick="setPayCur('ILS')">₪ שקל</button>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">הערה (אופציונלי)</label><input class="form-input" id="payNote" placeholder="תשלום חלקי..."></div>
+    <button class="btn btn-primary" onclick="submitPayment()">אשר תשלום ✓</button>
+    <button class="btn btn-ghost" onclick="closeOverlay('overlayAddPayment')">ביטול ❌</button>
+  </div>
+</div>
+
+<!-- Add Client -->
+<div class="overlay" id="overlayAddClient">
+  <div class="overlay-sheet">
+    <div class="overlay-handle"></div>
+    <div class="overlay-title">הוספת לקוח 👤</div>
+    <div class="form-group"><label class="form-label">שם</label><input class="form-input" id="clientName" placeholder="שם מלא..."></div>
+    <div class="form-group"><label class="form-label">טלפון</label><input class="form-input" id="clientPhone" type="tel" placeholder="050-..."></div>
+    <div class="form-group"><label class="form-label">הערות</label><textarea class="form-input" id="clientNotes" rows="2" placeholder="הערות..."></textarea></div>
+    <button class="btn btn-primary" onclick="submitClient()">שמור לקוח 💾</button>
+    <button class="btn btn-ghost" onclick="closeOverlay('overlayAddClient')">ביטול ❌</button>
+  </div>
+</div>
+
+<!-- Add Recurring -->
+<div class="overlay" id="overlayAddRecurring">
+  <div class="overlay-sheet">
+    <div class="overlay-handle"></div>
+    <div class="overlay-title">הוצאה קבועה 🔄</div>
+    <div class="form-group"><label class="form-label">שם</label><input class="form-input" id="recName" placeholder="שם ההוצאה..."></div>
+    <div class="form-group"><label class="form-label">סכום</label><input class="form-input" id="recAmount" type="number" placeholder="0"></div>
+    <div class="form-group">
+      <label class="form-label">מטבע</label>
+      <div class="currency-toggle">
+        <button class="ctog-btn active" id="recCur-usd" onclick="setRecCur('USD')">$ דולר</button>
+        <button class="ctog-btn" id="recCur-ils" onclick="setRecCur('ILS')">₪ שקל</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">תדירות</label>
+      <select class="form-input form-select" id="recFreq">
+        <option value="monthly">חודשי</option>
+        <option value="weekly">שבועי</option>
+        <option value="yearly">שנתי</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" onclick="submitRecurring()">שמור 💾</button>
+    <button class="btn btn-ghost" onclick="closeOverlay('overlayAddRecurring')">ביטול ❌</button>
+  </div>
+</div>
+
+<!-- Set Goal -->
+<div class="overlay" id="overlayGoal">
+  <div class="overlay-sheet">
+    <div class="overlay-handle"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div class="overlay-title" style="margin:0">יעד רווח חודשי 🎯</div>
+      <button class="btn btn-sm btn-danger" onclick="closeOverlay('overlayGoal')">ביטול ❌</button>
+    </div>
+    <div style="background:var(--surface2);border-radius:10px;padding:10px;margin-bottom:14px;font-size:12px;color:var(--hint)">
+      💡 ניתן לעדכן את היעד בכל עת — הבוט יעקוב אחרי ההתקדמות ויתריע אם אתה בסיכון לפספס
+    </div>
+    <div class="form-group"><label class="form-label">💰 סכום יעד</label><input class="form-input" id="goalAmount" type="number" placeholder="0"></div>
+    <div class="form-group"><label class="form-label">👥 כמות משתמשים</label><input class="form-input" id="projUsers" type="number" placeholder="0" min="0"></div>
+    <div class="form-group">
+      <label class="form-label">💱 מטבע</label>
+      <div class="currency-toggle">
+        <button class="ctog-btn active" id="goalCur-usd" onclick="setGoalCur('USD')">$ דולר</button>
+        <button class="ctog-btn" id="goalCur-ils" onclick="setGoalCur('ILS')">₪ שקל</button>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="submitGoal()">קבע יעד 🎯</button>
+  </div>
+</div>
+
+<!-- Edit Client -->
+<div class="overlay" id="overlayEditClient">
+  <div class="overlay-sheet">
+    <div class="overlay-handle"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div class="overlay-title" style="margin:0">עריכת לקוח ✏️</div>
+      <button class="btn btn-sm btn-danger" onclick="closeOverlay('overlayEditClient')">ביטול ❌</button>
+    </div>
+    <input type="hidden" id="editClientId">
+    <div class="form-group"><label class="form-label">👤 שם</label><input class="form-input" id="editClientName" placeholder="שם מלא..."></div>
+    <div class="form-group"><label class="form-label">📞 טלפון</label><input class="form-input" id="editClientPhone" type="tel" placeholder="050-..."></div>
+    <div class="form-group"><label class="form-label">📝 הערות</label><textarea class="form-input" id="editClientNotes" rows="2" placeholder="הערות..."></textarea></div>
+    <div class="form-group">
+      <label class="form-label">🔘 סטטוס</label>
+      <select class="form-input form-select" id="editClientStatus">
+        <option value="active">פעיל ✅</option>
+        <option value="pending">מעוכב ⏸</option>
+        <option value="done">הסתיים 🏁</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" onclick="submitEditClient()">שמור שינויים 💾</button>
+  </div>
+</div>
+
+<!-- Edit Project -->
+<div class="overlay" id="overlayEditProject">
+  <div class="overlay-sheet">
+    <div class="overlay-handle"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div class="overlay-title" style="margin:0">עריכת פרויקט ✏️</div>
+      <button class="btn btn-sm btn-danger" onclick="closeOverlay('overlayEditProject')">ביטול ❌</button>
+    </div>
+    <input type="hidden" id="editProjId">
+    <div class="form-group">
+      <label class="form-label">📂 קטגוריה</label>
+      <div style="display:flex;gap:8px">
+        <button class="ctog-btn active" id="ecat-bot" onclick="setEditCat('bot')">בוט 🤖</button>
+        <button class="ctog-btn" id="ecat-group" onclick="setEditCat('group')">קבוצה 👥</button>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label" id="editNameLabel">✏️ שם הבוט</label><input class="form-input" id="editProjName" placeholder="הזן שם..."></div>
+    <div class="form-group">
+      <label class="form-label">👤 לקוח</label>
+      <select class="form-input form-select" id="editProjClient"><option value="">ללא לקוח</option></select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">💱 מטבע</label>
+      <div class="currency-toggle">
+        <button class="ctog-btn active" id="ecur-usd" onclick="setEditCur('USD')">$ דולר</button>
+        <button class="ctog-btn" id="ecur-ils" onclick="setEditCur('ILS')">₪ שקל</button>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">💸 עלות הפרויקט</label><input class="form-input" id="editProjCost" type="number" placeholder="0"></div>
+    <div class="form-group"><label class="form-label">💰 מחיר מכירה מוסכם</label><input class="form-input" id="editProjRevTotal" type="number" placeholder="0"></div>
+    <div class="form-group">
+      <label class="form-label">🔄 סטטוס</label>
+      <select class="form-input form-select" id="editProjStatus">
+        <option value="active">בתהליך 🔄</option>
+        <option value="done">הושלם ✅</option>
+        <option value="paused">מושהה ⏸</option>
+      </select>
+    </div>
+    <div class="form-group"><label class="form-label">📅 דדליין</label><input class="form-input" id="editProjDeadline" type="date"></div>
+    <div class="form-group"><label class="form-label">📝 הערות</label><textarea class="form-input" id="editProjNotes" rows="2" placeholder="הערות..."></textarea></div>
+    <button class="btn btn-primary" onclick="submitEditProject()">שמור שינויים 💾</button>
+  </div>
+</div>
+
+<!-- Confirm Modal -->
+<div class="modal" id="confirmModal">
+  <div class="modal-box">
+    <div class="modal-title" id="confirmTitle">אישור מחיקה</div>
+    <div class="modal-text" id="confirmText">האם אתה בטוח?</div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeModal()">ביטול</button>
+      <button class="btn btn-danger" id="confirmOk" onclick="">מחק</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+//  Config
+// ─────────────────────────────────────────────
+const API = 'https://api.rerwrew.xyz'; // שנה לכתובת השרת שלך
+let tg = window.Telegram?.WebApp;
+if (tg) { tg.ready(); tg.expand(); }
+
+// ─────────────────────────────────────────────
+//  Utilities
+// ─────────────────────────────────────────────
+function toast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show';
+  setTimeout(() => t.className = 'toast', 2500);
+}
+
+async function api(path, opts={}) {
+  try {
+    const r = await fetch(API + path, { headers: {'Content-Type':'application/json'}, ...opts });
+    if (!r.ok) throw new Error(await r.text());
+    return await r.json();
+  } catch(e) {
+    toast('⚠️ שגיאת חיבור: ' + e.message);
+    return null;
+  }
+}
+
+function fmt(usd, rate) {
+  return `$${usd.toLocaleString('en',{minimumFractionDigits:0,maximumFractionDigits:2})} | ₪${(usd*rate).toLocaleString('he',{minimumFractionDigits:0,maximumFractionDigits:0})}`;
+}
+
+function roiExplain(roi) {
+  return `<span style="color:var(--green);font-family:var(--mono)">${roi}%</span> <span style="color:var(--hint);font-size:10px">— רווח על ההשקעה</span>`;
+}
+
+function statusBadge(s) {
+  const map = {active:'b-active',done:'b-done',paused:'b-paused'};
+  const labels = {active:'בתהליך 🔄',done:'הושלם ✅',paused:'מושהה ⏸'};
+  return `<span class="badge ${map[s]||'b-active'}">${labels[s]||s}</span>`;
+}
+
+function catBadge(c) {
+  return c === 'bot'
+    ? '<span class="badge b-bot">בוט 🤖</span>'
+    : '<span class="badge b-group">קבוצה 👥</span>';
+}
+
+function hAction(a) {
+  if(a.includes('add')) return {cls:'hd-add',lbl:'נוסף'};
+  if(a.includes('edit')) return {cls:'hd-edit',lbl:'עודכן'};
+  if(a.includes('delete')) return {cls:'hd-del',lbl:'נמחק'};
+  if(a.includes('payment')) return {cls:'hd-pay',lbl:'תשלום'};
+  return {cls:'hd-add',lbl:'פעולה'};
+}
+
+// ─────────────────────────────────────────────
+//  Navigation
+// ─────────────────────────────────────────────
+const navOrder = ['home','projects','clients','recurring','history','reports'];
+let currentScreen = 'home';
+
+function updateNavIndicator(name) {
+  const navEl = document.getElementById('nav-'+name);
+  const indicator = document.getElementById('navIndicator');
+  const nav = document.getElementById('bottomNav');
+  if(!navEl || !indicator || !nav) return;
+  const navRect = nav.getBoundingClientRect();
+  const itemRect = navEl.getBoundingClientRect();
+  const center = itemRect.left - navRect.left + itemRect.width/2;
+  indicator.style.left = (center - 16) + 'px';
+}
+
+function gotoScreen(name) {
+  if(name === currentScreen) return;
+
+  const oldIdx = navOrder.indexOf(currentScreen);
+  const newIdx = navOrder.indexOf(name);
+  const dir = newIdx > oldIdx ? 1 : -1;
+
+  // עדכן nav + indicator
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('nav-'+name)?.classList.add('active');
+  updateNavIndicator(name);
+
+  // מסך יוצא
+  const oldScreen = document.getElementById('screen-'+currentScreen);
+  if(oldScreen) {
+    oldScreen.style.transition = 'opacity 0.18s ease, transform 0.18s ease';
+    oldScreen.style.opacity = '0';
+    oldScreen.style.transform = `translateX(${dir * -30}px)`;
+    setTimeout(() => {
+      oldScreen.classList.remove('active');
+      oldScreen.style.transition = '';
+      oldScreen.style.opacity = '';
+      oldScreen.style.transform = '';
+    }, 180);
+  }
+
+  // מסך נכנס
+  setTimeout(() => {
+    const next = document.getElementById('screen-'+name);
+    if(next) {
+      next.style.transition = 'none';
+      next.style.opacity = '0';
+      next.style.transform = `translateX(${dir * 30}px)`;
+      next.classList.add('active');
+      requestAnimationFrame(() => {
+        next.style.transition = 'opacity 0.22s ease, transform 0.22s ease';
+        next.style.opacity = '1';
+        next.style.transform = 'translateX(0)';
+        setTimeout(() => { next.style.transition = ''; next.style.opacity = ''; next.style.transform = ''; }, 220);
+      });
+    }
+  }, 160);
+
+  currentScreen = name;
+  if(name==='home') loadDashboard();
+  if(name==='projects') loadProjects();
+  if(name==='clients') loadClients();
+  if(name==='recurring') loadRecurring();
+  if(name==='history') loadHistory();
+  if(name==='reports') loadReport('monthly');
+  if(name==='ai') initAIScreen();
+}
+
+// ─────────────────────────────────────────────
+//  Exchange Rate
+// ─────────────────────────────────────────────
+function initAIScreen() {
+  const msgs = document.getElementById('aiMessages');
+  if(msgs.children.length === 0) {
+    const welcome = 'שלום! אני היועץ העסקי שלך 🤖<br><br>אני מכיר את כל הנתונים שלך ויכול לעזור לך עם:<br>💰 תמחור וROI<br>📈 אסטרטגיה עסקית<br>💳 ניהול לקוחות<br>🎯 יעדים ותחזיות<br><br>מה תרצה לדעת?';
+    addMsg(welcome, false);
+  }
+}
+
+function fmtNum(n) {
+  return Math.round(n).toLocaleString('en-US');
+}
+function fmtILS(n, rate) {
+  return Math.round(n * rate).toLocaleString('he-IL');
+}
+
+let currentRate = 3.71;
+async function loadRate() {
+  const d = await api('/api/exchange');
+  if(!d) return;
+  currentRate = d.rate;
+  const chip = document.getElementById('rateChip');
+  document.getElementById('rateText').textContent = `$1 = ₪${d.rate.toFixed(2)}`;
+  if(d.stale) chip.classList.add('rate-stale');
+}
+
+// ─────────────────────────────────────────────
+//  Dashboard
+// ─────────────────────────────────────────────
+let profitChart = null;
+async function loadDashboard() {
+  const [dash, chartData] = await Promise.all([api('/api/dashboard'), api('/api/chart')]);
+  if(!dash) return;
+  const r = currentRate;
+  const goalBar = dash.goal
+    ? `<div class="card">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--hint);margin-bottom:6px">
+          <span>יעד חודשי 🎯</span>
+          <span style="cursor:pointer;color:var(--btn)" onclick="openOverlay('overlayGoal')">שנה</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px">
+          <span class="up" style="font-weight:600">${fmt(dash.month_profit,r)}</span>
+          <span style="color:var(--btn);font-weight:600">${dash.goal.pct}%</span>
+        </div>
+        <div class="goal-bar-bg"><div class="goal-bar-fill" style="width:${Math.min(dash.goal.pct,100)}%"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;margin-top:4px">
+          <span style="color:var(--hint)">נותר: ${`$${fmtNum(Math.max(dash.goal.remaining,0))} | ₪${fmtILS(Math.max(dash.goal.remaining,0),r)}`}</span>
+          ${dash.goal.pct<80 ? '<span style="color:var(--red)">⚠️ בסיכון</span>' : '<span style="color:var(--green)">✓ בדרך הנכונה</span>'}
+        </div>
+      </div>`
+    : `<button class="btn btn-ghost" onclick="openOverlay('overlayGoal')" style="margin-bottom:12px">🎯 הגדר יעד חודשי</button>`;
+
+  const trendIcon = dash.trend >= 0 ? '↑' : '↓';
+  const trendColor = dash.trend >= 0 ? 'up' : 'down';
+
+  const top3 = dash.top3_roi.map((p,i)=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:0.5px solid var(--border)">
+      <div class="rank-badge r${i+1}">${i+1}</div>
+      <div style="flex:1">
+        <div style="font-size:13px">${p.name}</div>
+        <div style="font-size:10px;color:var(--hint)">${p.category==='bot'?'בוט 🤖':'קבוצה 👥'}</div>
+      </div>
+      <div>${roiExplain(p.roi)}</div>
+    </div>`).join('');
+
+  const tips = dash.tips.map(t=>`
+    <div class="tip-row">
+      <div style="font-size:16px;flex-shrink:0">${t.icon}</div>
+      <div style="flex:1">
+        <div style="font-size:12px;line-height:1.5">${t.text}</div>
+        ${t.action?`<span class="tip-action">פעל עכשיו ←</span>`:''}
+      </div>
+    </div>`).join('');
+
+  // חישוב KPIs נוספים
+  const activeProjects = dash.total_projects || 0;
+  const avgRevenuePerProject = activeProjects > 0 ? (dash.month_profit / activeProjects).toFixed(0) : 0;
+  const avgRoi = dash.top3_roi?.length > 0 ? (dash.top3_roi.reduce((s,p)=>s+p.roi,0)/dash.top3_roi.length).toFixed(1) : 0;
+
+  document.getElementById('dashContent').innerHTML = `
+    ${goalBar}
+    <button onclick="openAddProject()" style="width:100%;margin-bottom:14px;padding:16px;background:#1a6b2a;border:none;border-radius:14px;color:#fff;font-family:var(--font);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 4px 16px rgba(26,107,42,0.3);transition:all 0.18s" onmousedown="this.style.transform='scale(0.97)';this.style.background='#155722'" onmouseup="this.style.transform='scale(1)';this.style.background='#1a6b2a'" ontouchstart="this.style.transform='scale(0.97)'" ontouchend="this.style.transform='scale(1)'">
+      <span style="font-size:20px">➕</span>
+      <span>הוסף פרויקט חדש</span>
+    </button>
+
+    <div class="card" id="aiTipsCard" style="background:#fffbeb;border-color:#fde68a;margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-size:11px;color:#92400e;font-weight:700">💡 טיפ יועץ</div>
+        <button class="btn btn-sm" style="padding:3px 8px;font-size:10px" onclick="loadNextTip()">↻</button>
+      </div>
+      <div id="aiTipContent" style="font-size:13px;color:#78350f;line-height:1.6;min-height:50px">
+        <div style="display:flex;gap:4px;align-items:center;padding:8px 0">
+          <div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div>
+        </div>
+      </div>
+      <button class="btn btn-sm" style="margin-top:10px;font-size:11px;width:100%" onclick="gotoScreen('ai')">שאל עוד שאלות ↗</button>
+    </div>
+    <div class="metric-grid">
+      <div class="metric-card">
+        <div class="metric-label">💰 רווח החודש</div>
+        <div class="metric-val ${trendColor}">$${fmtNum(dash.month_profit)}</div>
+        <div style="font-size:11px;color:var(--hint);font-family:var(--mono);margin-top:2px">₪${fmtILS(dash.month_profit,r)}</div>
+        <div class="metric-sub ${trendColor}">${trendIcon} ${Math.abs(dash.trend)}% מחודש קודם</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">🔮 תחזית חודש</div>
+        <div class="metric-val" style="color:var(--green)">$${fmtNum(dash.forecast)}</div>
+        <div style="font-size:11px;color:var(--hint);font-family:var(--mono);margin-top:2px">₪${fmtILS(dash.forecast,r)}</div>
+        <div class="metric-sub" style="color:var(--hint)">בסוף החודש</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">📈 ממוצע ROI</div>
+        <div class="metric-val" style="color:var(--btn)">${avgRoi}%</div>
+        <div class="metric-sub" style="color:var(--hint)">רווח על ההשקעה</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">💵 הכנסה לפרויקט</div>
+        <div class="metric-val">$${fmtNum(avgRevenuePerProject)}</div>
+        <div style="font-size:11px;color:var(--hint);font-family:var(--mono);margin-top:2px">₪${fmtILS(avgRevenuePerProject,r)}</div>
+        <div class="metric-sub" style="color:var(--hint)">ממוצע</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">💳 גבייה</div>
+        <div class="metric-val">${dash.collection_rate}%</div>
+        <div style="font-size:11px;color:var(--yellow);font-family:var(--mono);margin-top:2px">$${fmtNum(dash.outstanding)} | ₪${fmtILS(dash.outstanding,r)}</div>
+        <div class="metric-sub warn">ממתין לגבייה</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">📊 ממוצע חודשי</div>
+        <div class="metric-val">$${fmtNum(dash.avg_monthly)}</div>
+        <div style="font-size:11px;color:var(--hint);font-family:var(--mono);margin-top:2px">₪${fmtILS(dash.avg_monthly,r)}</div>
+        <div class="metric-sub" style="color:var(--hint)">כל הזמנים</div>
+      </div>
+    </div>
+
+    <div class="card" style="padding:12px;margin-bottom:12px">
+      <div style="font-size:11px;color:var(--hint);margin-bottom:10px;font-weight:500">📂 סטטוס פרויקטים</div>
+      <div id="statusKpi" style="display:flex;gap:8px">
+        <div style="flex:1;text-align:center;background:rgba(61,214,140,0.1);border-radius:10px;padding:8px;border:0.5px solid rgba(61,214,140,0.2)">
+          <div style="font-size:18px;font-weight:600;color:var(--green)" id="kpiActive">-</div>
+          <div style="font-size:10px;color:var(--hint)">פעילים 🔄</div>
+        </div>
+        <div style="flex:1;text-align:center;background:rgba(91,110,245,0.1);border-radius:10px;padding:8px;border:0.5px solid rgba(91,110,245,0.2)">
+          <div style="font-size:18px;font-weight:600;color:var(--btn)" id="kpiDone">-</div>
+          <div style="font-size:10px;color:var(--hint)">הושלמו ✅</div>
+        </div>
+        <div style="flex:1;text-align:center;background:rgba(245,200,66,0.1);border-radius:10px;padding:8px;border:0.5px solid rgba(245,200,66,0.2)">
+          <div style="font-size:18px;font-weight:600;color:var(--yellow)" id="kpiPaused">-</div>
+          <div style="font-size:10px;color:var(--hint)">מושהים ⏸</div>
+        </div>
+        <div style="flex:1;text-align:center;background:rgba(136,136,170,0.1);border-radius:10px;padding:8px;border:0.5px solid rgba(136,136,170,0.2)">
+          <div style="font-size:18px;font-weight:600;color:var(--hint)" id="kpiClients">-</div>
+          <div style="font-size:10px;color:var(--hint)">לקוחות 👤</div>
+        </div>
+      </div>
+    </div>
+
+    ${dash.star ? `<div class="star-card">
+      <div style="font-size:11px;color:var(--btn);margin-bottom:6px">⭐ פרויקט הכוכב</div>
+      <div style="font-size:15px;font-weight:600">${dash.star.name}</div>
+      <div style="font-size:12px;color:var(--hint);margin-top:3px">ROI: <span style="color:var(--green);font-weight:600;font-family:var(--mono)">${dash.star.roi}%</span></div>
+    </div>` : ''}
+
+    <div class="card">
+      <div style="font-size:11px;color:var(--hint);margin-bottom:10px">🏆 טופ 3 ROI</div>
+      ${top3}
+    </div>
+
+    <div class="card">
+      <div style="text-align:center;font-size:11px;color:var(--hint);font-weight:600;margin-bottom:12px">📊 רווח חודשי</div>
+      <div style="display:flex;justify-content:center;gap:16px;margin-bottom:12px">
+        <span style="font-size:10px;display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:3px;background:#1a6b2a;display:inline-block"></span>בוטים</span>
+        <span style="font-size:10px;display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:3px;background:#4caf7d;display:inline-block"></span>קבוצות</span>
+      </div>
+      <div class="chart-wrap" style="width:100%;padding:0 4px"><canvas id="profitCanvas"></canvas></div>
+    </div>
+
+    <div class="card">
+      <div style="text-align:center;font-size:11px;color:var(--hint);font-weight:600;margin-bottom:12px">📈 מגמת רווח לאורך זמן</div>
+      <div class="chart-wrap" style="width:100%;padding:0 4px"><canvas id="trendCanvas"></canvas></div>
+    </div>
+
+    <div class="card">
+      <div style="font-size:11px;color:var(--hint);margin-bottom:14px;text-align:center;font-weight:600">🥧 בוטים vs קבוצות — אחוז מהרווח</div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:16px">
+        <div style="position:relative;width:180px;height:180px;margin:0 auto"><canvas id="pieCanvas"></canvas></div>
+        <div id="pieLegend" style="width:100%;display:flex;flex-direction:column;gap:10px"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div style="font-size:11px;color:var(--hint);margin-bottom:14px;text-align:center;font-weight:600">💳 סטטוס גבייה — שולם vs ממתין</div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:16px">
+        <div style="position:relative;width:180px;height:180px;margin:0 auto"><canvas id="collectionCanvas"></canvas></div>
+        <div id="collectionLegend" style="width:100%;display:flex;flex-direction:column;gap:10px"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="text-align:center;font-size:11px;color:var(--hint);font-weight:600;margin-bottom:12px">📊 ROI לפי פרויקט</div>
+      <div id="roiBarWrap" style="position:relative;width:100%;height:180px;padding:0 4px"><canvas id="roiCanvas"></canvas></div>
+    </div>
+
+  `;
+
+  // שמור נתונים לטיפים
+  lastDashData = dash;
+  // טען טיפ ראשון
+  setTimeout(async () => {
+    await loadNextTip();
+    startTipTimer();
+  }, 800);
+
+  // Chart
+  if(chartData) {
+    const ctx = document.getElementById('profitCanvas')?.getContext('2d');
+    if(ctx) {
+      if(profitChart) profitChart.destroy();
+      profitChart = new Chart(ctx, {
+        type:'bar',
+        data:{
+          labels:chartData.labels,
+          datasets:[
+            {label:'בוטים',data:chartData.bots,backgroundColor:'rgba(26,107,42,0.8)',borderRadius:5,borderSkipped:false},
+            {label:'קבוצות',data:chartData.groups,backgroundColor:'rgba(76,175,125,0.8)',borderRadius:5,borderSkipped:false}
+          ]
+        },
+        options:{
+          responsive:true,maintainAspectRatio:false,
+          plugins:{legend:{display:false},tooltip:{callbacks:{label:v=>'$'+v.raw}}},
+          scales:{
+            x:{ticks:{color:'#8888aa',font:{size:10}},grid:{display:false}},
+            y:{ticks:{color:'#8888aa',font:{size:10},callback:v=>'$'+v},grid:{color:'rgba(255,255,255,0.05)'}}
+          }
+        }
+      });
+    }
+  }
+
+  // טען KPI סטטוס פרויקטים
+  const allProjects = await api('/api/projects?page=1');
+  const allClients = await api('/api/clients');
+  if(allProjects) {
+    const ps = allProjects.projects || [];
+    document.getElementById('kpiActive').textContent = ps.filter(p=>p.status==='active').length;
+    document.getElementById('kpiDone').textContent = ps.filter(p=>p.status==='done').length;
+    document.getElementById('kpiPaused').textContent = ps.filter(p=>p.status==='paused').length;
+    document.getElementById('kpiClients').textContent = allClients?.clients?.length || 0;
+
+    // גרף ROI לפי פרויקט
+    const roiProjects = ps.filter(p=>p.roi>0).sort((a,b)=>b.roi-a.roi).slice(0,6);
+    if(roiProjects.length > 0) {
+      const roiWrap = document.getElementById('roiBarWrap');
+      if(roiWrap) roiWrap.style.height = (roiProjects.length * 32 + 40) + 'px';
+      const roiCtx = document.getElementById('roiCanvas')?.getContext('2d');
+      if(roiCtx) new Chart(roiCtx, {
+        type:'bar',
+        data:{
+          labels: roiProjects.map(p=>p.name.length>10?p.name.slice(0,10)+'..':p.name),
+          datasets:[{
+            data: roiProjects.map(p=>p.roi),
+            backgroundColor: roiProjects.map(p=>p.category==='bot'?'rgba(91,110,245,0.75)':'rgba(124,92,191,0.75)'),
+            borderRadius:5, borderSkipped:false
+          }]
+        },
+        options:{
+          indexAxis:'y', responsive:true, maintainAspectRatio:false,
+          plugins:{legend:{display:false},tooltip:{callbacks:{label:v=>v.raw+'%'}}},
+          scales:{
+            x:{ticks:{color:'#8888aa',font:{size:9},callback:v=>v+'%'},grid:{color:'rgba(255,255,255,0.05)'}},
+            y:{ticks:{color:'#8888aa',font:{size:9}},grid:{display:false}}
+          }
+        }
+      });
+    }
+
+    // עוגה בוטים vs קבוצות
+    const botProfit = ps.filter(p=>p.category==='bot').reduce((s,p)=>s+(p.revenue_received_usd-p.cost_usd),0);
+    const grpProfit = ps.filter(p=>p.category==='group').reduce((s,p)=>s+(p.revenue_received_usd-p.cost_usd),0);
+    const totalPie = Math.max(0,botProfit) + Math.max(0,grpProfit);
+    const pieCtx = document.getElementById('pieCanvas')?.getContext('2d');
+    if(pieCtx && totalPie>0) {
+      new Chart(pieCtx, {
+        type:'doughnut',
+        data:{
+          labels:['בוטים','קבוצות'],
+          datasets:[{data:[Math.max(0,botProfit),Math.max(0,grpProfit)],backgroundColor:['rgba(91,110,245,0.85)','rgba(124,92,191,0.85)'],borderWidth:0}]
+        },
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:v=>'$'+v.raw.toLocaleString('en-US')}}},cutout:'68%'}
+      });
+      const botPct = totalPie>0?(botProfit/totalPie*100).toFixed(0):0;
+      const grpPct = totalPie>0?(grpProfit/totalPie*100).toFixed(0):0;
+      const pieLeg = document.getElementById('pieLegend');
+      if(pieLeg) pieLeg.innerHTML = `
+        <div style="display:flex;gap:10px">
+          <div style="flex:1;background:rgba(91,110,245,0.08);border:0.5px solid rgba(91,110,245,0.2);border-radius:10px;padding:10px;text-align:center">
+            <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:6px">
+              <div style="width:8px;height:8px;border-radius:2px;background:#5b6ef5"></div>
+              <span style="font-size:11px;color:var(--hint)">בוטים 🤖</span>
+            </div>
+            <div style="font-size:18px;font-weight:600;font-family:var(--mono);color:#5b6ef5">$${fmtNum(botProfit)}</div>
+            <div style="font-size:12px;color:var(--hint);margin-top:2px">${botPct}%</div>
+          </div>
+          <div style="flex:1;background:rgba(124,92,191,0.08);border:0.5px solid rgba(124,92,191,0.2);border-radius:10px;padding:10px;text-align:center">
+            <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:6px">
+              <div style="width:8px;height:8px;border-radius:2px;background:#9b7fe8"></div>
+              <span style="font-size:11px;color:var(--hint)">קבוצות 👥</span>
+            </div>
+            <div style="font-size:18px;font-weight:600;font-family:var(--mono);color:#9b7fe8">$${fmtNum(grpProfit)}</div>
+            <div style="font-size:12px;color:var(--hint);margin-top:2px">${grpPct}%</div>
+          </div>
+        </div>`;
+    }
+
+    // גביה — שולם vs ממתין
+    const totalPaid = ps.reduce((s,p)=>s+p.revenue_received_usd,0);
+    const totalPending = ps.reduce((s,p)=>s+(p.revenue_total_usd-p.revenue_received_usd),0);
+    const colCtx = document.getElementById('collectionCanvas')?.getContext('2d');
+    if(colCtx) {
+      new Chart(colCtx, {
+        type:'doughnut',
+        data:{
+          labels:['שולם','ממתין'],
+          datasets:[{data:[Math.max(0,totalPaid),Math.max(0,totalPending)],backgroundColor:['rgba(61,214,140,0.85)','rgba(245,200,66,0.6)'],borderWidth:0}]
+        },
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:v=>'$'+v.raw.toLocaleString('en-US')}}},cutout:'68%'}
+      });
+      const colLeg = document.getElementById('collectionLegend');
+      const colTotal = totalPaid + totalPending;
+      const paidPct = colTotal>0?(totalPaid/colTotal*100).toFixed(0):0;
+      const pendPct = colTotal>0?(totalPending/colTotal*100).toFixed(0):0;
+      if(colLeg) colLeg.innerHTML = `
+        <div style="display:flex;gap:10px">
+          <div style="flex:1;background:rgba(61,214,140,0.08);border:0.5px solid rgba(61,214,140,0.2);border-radius:10px;padding:10px;text-align:center">
+            <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:6px">
+              <div style="width:8px;height:8px;border-radius:2px;background:#3dd68c"></div>
+              <span style="font-size:11px;color:var(--hint)">שולם ✅</span>
+            </div>
+            <div style="font-size:18px;font-weight:600;font-family:var(--mono);color:var(--green)">$${fmtNum(totalPaid)}</div>
+            <div style="font-size:12px;color:var(--hint);margin-top:2px">${paidPct}%</div>
+          </div>
+          <div style="flex:1;background:rgba(245,200,66,0.08);border:0.5px solid rgba(245,200,66,0.2);border-radius:10px;padding:10px;text-align:center">
+            <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:6px">
+              <div style="width:8px;height:8px;border-radius:2px;background:#f5c842"></div>
+              <span style="font-size:11px;color:var(--hint)">ממתין ⏳</span>
+            </div>
+            <div style="font-size:18px;font-weight:600;font-family:var(--mono);color:var(--yellow)">$${fmtNum(totalPending)}</div>
+            <div style="font-size:12px;color:var(--hint);margin-top:2px">${pendPct}%</div>
+          </div>
+        </div>`;
+    }
+  }
+
+  // גרף מגמה
+  if(chartData) {
+    const trendCtx = document.getElementById('trendCanvas')?.getContext('2d');
+    if(trendCtx) {
+      const combined = chartData.bots.map((b,i)=>b+chartData.groups[i]);
+      new Chart(trendCtx, {
+        type:'line',
+        data:{
+          labels:chartData.labels,
+          datasets:[{
+            data:combined,
+            borderColor:'#1a6b2a',
+            backgroundColor:'rgba(26,107,42,0.08)',
+            borderWidth:2, pointRadius:4,
+            pointBackgroundColor:'#1a6b2a',
+            fill:true, tension:0.4
+          }]
+        },
+        options:{
+          responsive:true,maintainAspectRatio:false,
+          plugins:{legend:{display:false},tooltip:{callbacks:{label:v=>'$'+v.raw}}},
+          scales:{
+            x:{ticks:{color:'#8888aa',font:{size:10}},grid:{display:false}},
+            y:{ticks:{color:'#8888aa',font:{size:10},callback:v=>'$'+v},grid:{color:'rgba(255,255,255,0.05)'}}
+          }
+        }
+      });
+    }
+  }
+}
+
+// ─────────────────────────────────────────────
+//  Projects
+// ─────────────────────────────────────────────
+let projFilter = 'all', projPage = 1;
+async function loadProjects(page=1) {
+  projPage = page;
+  let params = `page=${page}`;
+  if(projFilter.startsWith('status-')) params += `&status=${projFilter.replace('status-','')}`;
+  else if(projFilter !== 'all') params += `&category=${projFilter}`;
+  const d = await api('/api/projects?'+params);
+  if(!d) return;
+  const r = currentRate;
+  const html = d.projects.map(p => {
+    const pct = p.collection_pct;
+    return `<div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <div>
+          <div style="font-size:14px;font-weight:600">${p.name}</div>
+          ${p.client ? `<div style="font-size:10px;color:var(--hint);margin-top:2px">👤 ${p.client}</div>` : ''}
+        </div>
+        <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+          ${statusBadge(p.status)} ${catBadge(p.category)}
+        </div>
+      </div>
+      <div style="font-size:11px">
+        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:0.5px solid var(--border)"><span style="color:var(--hint)">עלות</span><span style="font-family:var(--mono)">$${fmtNum(p.cost_usd)} | ₪${fmtNum(p.cost_ils)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:0.5px solid var(--border)"><span style="color:var(--hint)">מחיר מוסכם</span><span style="font-family:var(--mono)">$${fmtNum(p.revenue_total_usd)} | ₪${fmtNum(p.revenue_total_ils)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:0.5px solid var(--border)"><span style="color:var(--hint)">התקבל</span><span style="font-family:var(--mono);color:var(--green)">$${fmtNum(p.revenue_received_usd)} | ₪${fmtNum(p.revenue_received_ils)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:0.5px solid var(--border)"><span style="color:var(--hint)">ממתין</span><span style="font-family:var(--mono);color:var(--yellow)">$${fmtNum(p.remaining_usd)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:var(--hint)">ROI — רווח על ההשקעה</span><span>${roiExplain(p.roi)}</span></div>
+      </div>
+      <div class="pay-bar-bg"><div class="pay-bar-fill" style="width:${pct}%"></div></div>
+      <div style="font-size:10px;color:var(--hint);margin-top:4px">${pct}% שולם</div>
+      ${p.deadline ? `<div style="font-size:10px;color:var(--yellow);margin-top:4px">⏰ דדליין: ${p.deadline.split('T')[0]}</div>` : ''}
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+        <button class="btn btn-sm" onclick="openPayment(${p.id})">💳 תשלום</button>
+        <button class="btn btn-sm" onclick="openEditProject(${p.id})">✏️ ערוך</button>
+        <button class="btn btn-sm btn-danger" onclick="confirmDelete('project',${p.id},'${p.name}')">🗑️</button>
+      </div>
+    </div>`;
+  }).join('') || '<div class="loading">אין פרויקטים</div>';
+
+  document.getElementById('projectsList').innerHTML = html;
+  // Pager
+  let pager = '';
+  for(let i=1;i<=d.pages;i++) pager += `<button class="btn btn-sm ${i===page?'active':''}" onclick="loadProjects(${i})">${i}</button>`;
+  document.getElementById('projectsPager').innerHTML = pager;
+}
+
+function filterProjects(f, el) {
+  projFilter = f;
+  document.querySelectorAll('#screen-projects .btn-sm').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  loadProjects(1);
+}
+
+// ─────────────────────────────────────────────
+//  Clients
+// ─────────────────────────────────────────────
+async function loadClients() {
+  const d = await api('/api/clients');
+  if(!d) return;
+  const html = d.clients.map(c => {
+    const statusMap = {active:'b-active',pending:'b-paused',done:'b-done'};
+    const statusLabel = {active:'פעיל',pending:'מעוכב',done:'הסתיים'};
+    return `<div class="card" style="display:flex;gap:12px;align-items:center">
+      <div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--btn),#7c5cbf);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;flex-shrink:0">${c.name.charAt(0)}</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:600">${c.name}</div>
+        <div style="font-size:11px;color:var(--hint);margin-top:2px">${c.projects_count} פרויקטים | $${fmtNum(c.total_usd)} סה״כ</div>
+        ${c.outstanding_usd > 0 ? `<div style="font-size:11px;color:var(--yellow);margin-top:2px">ממתין: $${fmtNum(c.outstanding_usd)} | ₪${fmtNum(c.outstanding_ils)}</div>` : '<div style="font-size:11px;color:var(--green);margin-top:2px">שולם במלואו ✓</div>'}
+        ${c.phone ? `<div style="font-size:11px;color:var(--hint);margin-top:2px">📞 ${c.phone}</div>` : ''}
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+        <span class="badge ${statusMap[c.status]||'b-active'}">${statusLabel[c.status]||c.status}</span>
+        <button class="btn btn-sm" onclick="openEditClient(${c.id},'${c.name}','${c.phone}','${c.notes||''}','${c.status}')" style="font-size:10px;padding:4px 10px">✏️ ערוך</button>
+      </div>
+    </div>`;
+  }).join('') || '<div class="loading">אין לקוחות</div>';
+  document.getElementById('clientsList').innerHTML = html;
+}
+
+// ─────────────────────────────────────────────
+//  Recurring
+// ─────────────────────────────────────────────
+async function loadRecurring() {
+  const d = await api('/api/recurring');
+  if(!d) return;
+  const r = currentRate;
+  const freqMap = {monthly:'חודשי',weekly:'שבועי',yearly:'שנתי'};
+  const items = d.items.map(rc => `<div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-size:13px;font-weight:500">${rc.name}</div>
+        <div style="font-size:10px;color:var(--hint);margin-top:2px">${freqMap[rc.frequency]||rc.frequency}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="font-size:13px;font-weight:600;font-family:var(--mono);color:var(--red)">$${fmtNum(rc.amount_usd)} | ₪${fmtNum(rc.amount_ils)}</div>
+        <button class="btn btn-sm btn-danger" onclick="deleteRecurring(${rc.id})">🗑️</button>
+      </div>
+    </div>
+  </div>`).join('');
+
+  document.getElementById('recurringContent').innerHTML = `
+    <div class="card" style="background:linear-gradient(135deg,#2a1515,#201e30);border-color:rgba(245,91,91,0.2)">
+      <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:12px;border-bottom:0.5px solid rgba(255,255,255,0.05)">
+        <span style="color:var(--hint)">סה״כ חודשי</span>
+        <span style="color:var(--red);font-family:var(--mono);font-weight:600">$${fmtNum(d.monthly_total_usd)} | ₪${fmtNum(d.monthly_total_ils)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:12px">
+        <span style="color:var(--hint)">סה״כ שנתי</span>
+        <span style="color:var(--red);font-family:var(--mono);font-weight:600">$${fmtNum(d.yearly_total_usd)} | ₪${fmtNum(d.yearly_total_ils)}</span>
+      </div>
+    </div>
+    ${items || '<div class="loading">אין הוצאות קבועות</div>'}
+  `;
+}
+
+// ─────────────────────────────────────────────
+//  History
+// ─────────────────────────────────────────────
+async function loadHistory(page=1, actionFilter='') {
+  const d = await api(`/api/history?page=${page}&action=${actionFilter}`);
+  if(!d) return;
+  const html = d.logs.map(l => {
+    const {cls,lbl} = hAction(l.action);
+    const date = new Date(l.created_at).toLocaleString('he-IL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+    return `<div style="display:flex;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--border)">
+      <div class="h-dot ${cls}" style="margin-top:5px"></div>
+      <div style="flex:1">
+        <div style="font-size:12px">${l.entity_name ? `<strong>${l.entity_name}</strong> — ` : ''}${l.detail || lbl}</div>
+        <div style="font-size:10px;color:var(--hint);margin-top:2px">${date}</div>
+      </div>
+    </div>`;
+  }).join('') || '<div class="loading">אין היסטוריה</div>';
+
+  document.getElementById('historyList').innerHTML = html;
+  let pager = '';
+  const total = Math.ceil(d.total/20);
+  for(let i=1;i<=total;i++) pager += `<button class="btn btn-sm ${i===page?'active':''}" onclick="loadHistory(${i})">${i}</button>`;
+  document.getElementById('historyPager').innerHTML = pager;
+}
+
+// ─────────────────────────────────────────────
+//  Reports
+// ─────────────────────────────────────────────
+let repChart = null;
+async function loadReport(period, el=null) {
+  if(el) {
+    document.querySelectorAll('#screen-reports .btn-sm').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+  }
+  const d = await api(`/api/reports/${period}`);
+  if(!d) return;
+  const r = currentRate;
+  const periodLabel = {weekly:'שבועי',monthly:'חודשי',quarterly:'רבעוני'}[period];
+  const winner = `${d.winner} רווחיות ב-${d.winner_diff}% יותר`;
+  const top3 = d.top3.map((p,i)=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:0.5px solid var(--border)">
+      <div class="rank-badge r${i+1}">${i+1}</div>
+      <div style="flex:1;font-size:13px">${p.name}</div>
+      <div>${roiExplain(p.roi)}</div>
+    </div>`).join('');
+  document.getElementById('reportContent').innerHTML = `
+    <div class="card">
+      <div style="font-size:12px;color:var(--hint);margin-bottom:12px">דוח ${periodLabel}</div>
+      <div style="font-size:11px">
+        <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--border)"><span style="color:var(--hint)">הכנסות</span><span style="font-family:var(--mono);color:var(--green)">$${fmtNum(d.total_revenue_usd)} | ₪${fmtNum(d.total_revenue_ils)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--border)"><span style="color:var(--hint)">הוצאות</span><span style="font-family:var(--mono);color:var(--red)">$${fmtNum(d.total_cost_usd)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--border)"><span style="color:var(--hint)">הוצאות קבועות (חודשי)</span><span style="font-family:var(--mono);color:var(--red)">$${fmtNum(d.recurring_monthly_usd)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--border)"><span style="color:var(--hint)">רווח נקי</span><span style="font-family:var(--mono);font-weight:600;color:var(--green)">$${fmtNum(d.profit_usd)} | ₪${fmtNum(d.profit_ils)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--border)"><span style="color:var(--hint)">לגבייה</span><span style="font-family:var(--mono);color:var(--yellow)">$${fmtNum(d.outstanding_usd)}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:5px 0"><span style="color:var(--hint)">ROI כולל</span><span>${roiExplain(d.roi)}</span></div>
+      </div>
+    </div>
+    <div class="card" style="background:linear-gradient(135deg,#1e2a1e,#1e2530);border-color:rgba(61,214,140,0.2)">
+      <div style="font-size:11px;color:var(--green);margin-bottom:6px">📊 בוטים vs קבוצות</div>
+      <div style="font-size:12px;margin-bottom:8px">🏆 ${winner}</div>
+      <div style="display:flex;gap:10px;font-size:11px">
+        <div style="flex:1;text-align:center;padding:8px;background:rgba(91,110,245,0.1);border-radius:8px">
+          <div style="color:var(--hint)">בוטים</div>
+          <div style="color:var(--btn);font-weight:600;font-family:var(--mono)">${d.bot_roi.toFixed(1)}%</div>
+        </div>
+        <div style="flex:1;text-align:center;padding:8px;background:rgba(124,92,191,0.1);border-radius:8px">
+          <div style="color:var(--hint)">קבוצות</div>
+          <div style="color:#9b7fe8;font-weight:600;font-family:var(--mono)">${d.group_roi.toFixed(1)}%</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div style="font-size:11px;color:var(--hint);margin-bottom:10px">🏆 טופ 3 ROI — רווח על ההשקעה</div>
+      ${top3}
+    </div>
+  `;
+}
+
+// ─────────────────────────────────────────────
+//  Overlays & Forms
+// ─────────────────────────────────────────────
+function openOverlay(id) { document.getElementById(id).classList.add('open') }
+function closeOverlay(id) { document.getElementById(id).classList.remove('open') }
+document.querySelectorAll('.overlay').forEach(o => o.addEventListener('click', e => { if(e.target===o) o.classList.remove('open') }));
+
+// Form state
+let projCat = 'bot', projCur = 'USD', payCur = 'USD', recCur = 'USD', goalCur = 'USD';
+
+// ─────────────────────────────────────────────
+//  Project Wizard
+// ─────────────────────────────────────────────
+let wizardStep = 0;
+let wizardData = {};
+let wizardClientsList = [];
+
+const wizardSteps = [
+  {
+    id: 'category',
+    question: () => 'מה אנחנו מוסיפים היום? 🚀',
+    sub: () => 'בוט חדש או קבוצה?',
+    render: () => `
+      <div style="display:flex;gap:12px;margin-top:8px">
+        <button onclick="wizardData.category='bot';document.querySelectorAll('.wiz-cat').forEach(b=>b.classList.remove('wiz-sel'));this.classList.add('wiz-sel')" class="wiz-cat ${wizardData.category==='bot'?'wiz-sel':''}" style="flex:1;padding:20px 10px;border-radius:14px;border:2px solid var(--border2);background:var(--surface2);cursor:pointer;font-family:var(--font);font-size:14px;font-weight:600;color:var(--text2);transition:all 0.2s;text-align:center">
+          <div style="font-size:32px;margin-bottom:6px">🤖</div>בוט
+        </button>
+        <button onclick="wizardData.category='group';document.querySelectorAll('.wiz-cat').forEach(b=>b.classList.remove('wiz-sel'));this.classList.add('wiz-sel')" class="wiz-cat ${wizardData.category==='group'?'wiz-sel':''}" style="flex:1;padding:20px 10px;border-radius:14px;border:2px solid var(--border2);background:var(--surface2);cursor:pointer;font-family:var(--font);font-size:14px;font-weight:600;color:var(--text2);transition:all 0.2s;text-align:center">
+          <div style="font-size:32px;margin-bottom:6px">👥</div>קבוצה
+        </button>
+      </div>`,
+    validate: () => {
+      if(!wizardData.category) { toast('⚠️ בחר קטגוריה'); return false; }
+      return true;
+    }
+  },
+  {
+    id: 'name',
+    question: () => wizardData.category==='bot' ? 'איזה שם הולך לבוט? 🤖' : 'מה שם הקבוצה? 👥',
+    sub: () => wizardData.category==='bot' ? 'תן לו שם שתזכור אותו בלילה' : 'שם שכולם יזכרו',
+    render: () => `<input class="form-input" id="wiz-name" value="${wizardData.name||''}" placeholder="${wizardData.category==='bot'?'לדוגמה: SpamGuard Pro':'לדוגמה: VIP Members'}" style="margin-top:8px;font-size:16px" oninput="wizardData.name=this.value">`,
+    validate: () => {
+      if(!wizardData.name?.trim()) { toast('⚠️ קצת שם לא יזיק 😅'); return false; }
+      return true;
+    },
+    onEnter: () => setTimeout(()=>document.getElementById('wiz-name')?.focus(),100)
+  },
+  {
+    id: 'client',
+    question: () => `מי הלקוח של "${wizardData.name}"? 👤`,
+    sub: () => 'אפשר גם בלי לקוח, זה בסדר',
+    render: () => `<select class="form-input form-select" id="wiz-client" style="margin-top:8px" onchange="wizardData.clientId=this.value">
+      <option value="">בלי לקוח ספציפי</option>
+      ${wizardClientsList.map(c=>`<option value="${c.id}" ${wizardData.clientId==c.id?'selected':''}>${c.name}</option>`).join('')}
+    </select>`,
+    validate: () => true
+  },
+  {
+    id: 'currency',
+    question: () => 'באיזו מטבע נעבוד? 💱',
+    sub: () => 'זה ישפיע על כל הסכומים שתזין',
+    render: () => `
+      <div style="display:flex;gap:12px;margin-top:8px">
+        <button onclick="wizardData.currency='USD';document.querySelectorAll('.wiz-cur').forEach(b=>b.classList.remove('wiz-sel'));this.classList.add('wiz-sel')" class="wiz-cur ${(wizardData.currency||'USD')==='USD'?'wiz-sel':''}" style="flex:1;padding:18px;border-radius:14px;border:2px solid var(--border2);background:var(--surface2);cursor:pointer;font-family:var(--font);font-size:15px;font-weight:700;color:var(--text2);transition:all 0.2s;text-align:center">
+          <div style="font-size:28px;margin-bottom:4px">💵</div>דולר $
+        </button>
+        <button onclick="wizardData.currency='ILS';document.querySelectorAll('.wiz-cur').forEach(b=>b.classList.remove('wiz-sel'));this.classList.add('wiz-sel')" class="wiz-cur ${wizardData.currency==='ILS'?'wiz-sel':''}" style="flex:1;padding:18px;border-radius:14px;border:2px solid var(--border2);background:var(--surface2);cursor:pointer;font-family:var(--font);font-size:15px;font-weight:700;color:var(--text2);transition:all 0.2s;text-align:center">
+          <div style="font-size:28px;margin-bottom:4px">🪙</div>שקל ₪
+        </button>
+      </div>`,
+    validate: () => { if(!wizardData.currency) wizardData.currency='USD'; return true; }
+  },
+  {
+    id: 'cost',
+    question: () => wizardData.category==='bot' ? `כמה הרצלים עולה לבנות את ${wizardData.name}? 💸` : `כמה עלה להקים את ${wizardData.name}? 💸`,
+    sub: () => `כמה השקעת מכיסך — ב${wizardData.currency==='ILS'?'שקלים':'דולרים'}`,
+    render: () => `
+      <div style="margin-top:8px;position:relative">
+        <span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:18px;color:var(--hint)">${wizardData.currency==='ILS'?'₪':'$'}</span>
+        <input class="form-input" id="wiz-cost" type="number" value="${wizardData.cost||''}" placeholder="0" style="padding-right:36px;font-size:18px;font-family:var(--mono)" oninput="wizardData.cost=this.value">
+      </div>`,
+    validate: () => {
+      if(!wizardData.cost || parseFloat(wizardData.cost)<0) { toast('⚠️ גם 0 זה סכום 😄'); return false; }
+      return true;
+    },
+    onEnter: () => setTimeout(()=>document.getElementById('wiz-cost')?.focus(),100)
+  },
+  {
+    id: 'revenue',
+    question: () => `ועכשיו הכיף — תגיד לי שגבית הרבה מ${wizardData.name}? 💰`,
+    sub: () => `כמה המחיר המוסכם ב${wizardData.currency==='ILS'?'שקלים':'דולרים'}`,
+    render: () => `
+      <div style="margin-top:8px;position:relative">
+        <span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:18px;color:var(--hint)">${wizardData.currency==='ILS'?'₪':'$'}</span>
+        <input class="form-input" id="wiz-rev" type="number" value="${wizardData.revenue||''}" placeholder="0" style="padding-right:36px;font-size:18px;font-family:var(--mono)" oninput="wizardData.revenue=this.value">
+      </div>
+      ${wizardData.cost && wizardData.revenue && parseFloat(wizardData.revenue)>parseFloat(wizardData.cost) ?
+        `<div style="margin-top:10px;padding:10px;background:var(--green-light);border-radius:10px;font-size:12px;color:var(--green);font-weight:600">
+          🎉 ROI משוער: ${Math.round((parseFloat(wizardData.revenue)-parseFloat(wizardData.cost))/parseFloat(wizardData.cost)*100)}% — לא רע בכלל!
+        </div>` : ''}`,
+    validate: () => {
+      if(!wizardData.revenue || parseFloat(wizardData.revenue)<0) { toast('⚠️ תגיד לי שגבית משהו 😅'); return false; }
+      return true;
+    },
+    onEnter: () => setTimeout(()=>document.getElementById('wiz-rev')?.focus(),100)
+  },
+  {
+    id: 'deadline',
+    question: () => `יש דדליין ל${wizardData.name}? ⏰`,
+    sub: () => 'אם לא — אל דאגה, נמשיך בלעדיו',
+    render: () => `
+      <input class="form-input" id="wiz-deadline" type="date" value="${wizardData.deadline||''}" style="margin-top:8px" oninput="wizardData.deadline=this.value">
+      <button onclick="wizardData.deadline='';document.getElementById('wiz-deadline').value=''" class="btn btn-ghost" style="margin-top:8px;font-size:12px">אין דדליין ← דלג</button>`,
+    validate: () => true
+  },
+  {
+    id: 'notes',
+    question: () => 'משהו שחשוב לזכור? 📝',
+    sub: () => 'הערות, פרטים, קומבינות — הכל כאן',
+    render: () => `<textarea class="form-input" id="wiz-notes" rows="3" placeholder="לא חובה, אבל שווה לרשום..." style="margin-top:8px;resize:none" oninput="wizardData.notes=this.value">${wizardData.notes||''}</textarea>`,
+    validate: () => true
+  }
+];
+
+function wizardRenderStep(dir=1) {
+  const step = wizardSteps[wizardStep];
+  const total = wizardSteps.length;
+  const pct = ((wizardStep+1)/total*100).toFixed(0);
+
+  // progress
+  document.getElementById('wizardBar').style.width = pct+'%';
+  document.getElementById('wizardStepLabel').textContent = `${wizardStep+1}/${total}`;
+
+  // dots
+  const dots = document.getElementById('wizardDots');
+  dots.innerHTML = wizardSteps.map((_,i)=>`<div style="width:${i===wizardStep?'20px':'8px'};height:8px;border-radius:4px;background:${i<=wizardStep?'var(--btn)':'var(--border2)'};transition:all 0.3s ease"></div>`).join('');
+
+  // buttons
+  document.getElementById('wizardBack').style.display = wizardStep>0 ? 'flex' : 'none';
+  const nextBtn = document.getElementById('wizardNext');
+  nextBtn.textContent = wizardStep===total-1 ? 'שמור פרויקט 💾' : 'הבא ←';
+
+  // animate step
+  const container = document.getElementById('wizardSteps');
+  const slideOut = dir > 0 ? '-60px' : '60px';
+  const slideIn = dir > 0 ? '60px' : '-60px';
+
+  container.style.transition = 'opacity 0.18s ease, transform 0.18s ease';
+  container.style.opacity = '0';
+  container.style.transform = `translateX(${slideOut})`;
+
+  setTimeout(() => {
+    container.innerHTML = `
+      <div style="margin-bottom:6px;font-size:20px;font-weight:700;color:var(--text);line-height:1.3">${step.question()}</div>
+      <div style="font-size:13px;color:var(--hint);margin-bottom:4px">${step.sub()}</div>
+      ${step.render()}
+    `;
+    container.style.transition = 'none';
+    container.style.transform = `translateX(${slideIn})`;
+    container.style.opacity = '0';
+
+    requestAnimationFrame(() => {
+      container.style.transition = 'opacity 0.22s ease, transform 0.22s ease';
+      container.style.opacity = '1';
+      container.style.transform = 'translateX(0)';
+    });
+
+    if(step.onEnter) step.onEnter();
+
+    // style selected buttons
+    setTimeout(() => {
+      document.querySelectorAll('.wiz-sel').forEach(b => {
+        b.style.borderColor = 'var(--btn)';
+        b.style.background = 'var(--green-light)';
+        b.style.color = 'var(--btn)';
+      });
+    }, 50);
+  }, 180);
+}
+
+async function openAddProject() {
+  wizardStep = 0;
+  wizardData = { category: 'bot', currency: 'USD', status: 'active' };
+  const clients = await api('/api/clients');
+  wizardClientsList = clients?.clients || [];
+  openOverlay('overlayAddProject');
+  wizardRenderStep(1);
+}
+
+function wizardClose() {
+  closeOverlay('overlayAddProject');
+}
+
+function wizardPrev() {
+  if(wizardStep > 0) { wizardStep--; wizardRenderStep(-1); }
+}
+
+async function wizardNext() {
+  const step = wizardSteps[wizardStep];
+  if(!step.validate()) return;
+
+  if(wizardStep < wizardSteps.length-1) {
+    wizardStep++;
+    wizardRenderStep(1);
+  } else {
+    await submitProject();
+  }
+}
+
+async function submitProject() {
+  const rate = currentRate;
+  const factor = (wizardData.currency||'USD') === 'USD' ? 1 : 1/rate;
+  const cost = parseFloat(wizardData.cost)||0;
+  const revTotal = parseFloat(wizardData.revenue)||0;
+
+  const body = {
+    name: wizardData.name?.trim(),
+    category: wizardData.category||'bot',
+    client_id: wizardData.clientId ? parseInt(wizardData.clientId) : null,
+    currency: wizardData.currency||'USD',
+    cost: cost * factor,
+    advance_paid: 0,
+    revenue_total: revTotal * factor,
+    revenue_received: 0,
+    status: 'active',
+    deadline: wizardData.deadline||null,
+    notes: wizardData.notes||'',
+  };
+
+  const r = await api('/api/projects', {method:'POST', body:JSON.stringify(body)});
+  if(r?.ok) {
+    toast('✅ פרויקט נוסף בהצלחה! 🎉');
+    closeOverlay('overlayAddProject');
+    loadProjects();
+    loadDashboard();
+  }
+}
+function setPayCur(c) {
+  payCur = c;
+  document.getElementById('payCur-usd').classList.toggle('active', c==='USD');
+  document.getElementById('payCur-ils').classList.toggle('active', c==='ILS');
+}
+function setRecCur(c) {
+  recCur = c;
+  document.getElementById('recCur-usd').classList.toggle('active', c==='USD');
+  document.getElementById('recCur-ils').classList.toggle('active', c==='ILS');
+}
+function setGoalCur(c) {
+  goalCur = c;
+  document.getElementById('goalCur-usd').classList.toggle('active', c==='USD');
+  document.getElementById('goalCur-ils').classList.toggle('active', c==='ILS');
+}
+
+async function openAddProject() {
+  const clients = await api('/api/clients');
+  const sel = document.getElementById('projClient');
+  sel.innerHTML = '<option value="">ללא לקוח</option>' + (clients?.clients||[]).map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  openOverlay('overlayAddProject');
+}
+
+async function submitProject() {
+  const cost = parseFloat(document.getElementById('projCost').value)||0;
+  const revTotal = parseFloat(document.getElementById('projRevTotal').value)||0;
+  const body = {
+    name: document.getElementById('projName').value.trim(),
+    category: projCat,
+    client_id: document.getElementById('projClient').value || null,
+    currency: projCur,
+    cost: cost,
+    advance_paid: 0,
+    revenue_total: revTotal,
+    revenue_received: 0,
+    status: document.getElementById('projStatus').value,
+    deadline: document.getElementById('projDeadline').value || null,
+    notes: document.getElementById('projNotes').value.trim(),
+  };
+  if(!body.name) { toast('⚠️ יש להזין שם'); return; }
+  if(revTotal > 0 && revTotal < cost) {
+    toast('💡 תשלום חלקי זוהה — תוכל להזין תשלומים בהמשך');
+  }
+  const r = await api('/api/projects', {method:'POST', body:JSON.stringify(body)});
+  if(r?.ok) { toast('✅ פרויקט נשמר'); closeOverlay('overlayAddProject'); loadProjects(); }
+}
+
+function openPayment(id) {
+  document.getElementById('payProjId').value = id;
+  document.getElementById('payAmount').value = '';
+  document.getElementById('payNote').value = '';
+  openOverlay('overlayAddPayment');
+}
+
+async function submitPayment() {
+  const body = {
+    project_id: parseInt(document.getElementById('payProjId').value),
+    amount: parseFloat(document.getElementById('payAmount').value)||0,
+    currency: payCur,
+    note: document.getElementById('payNote').value,
+  };
+  if(!body.amount) { toast('⚠️ יש להזין סכום'); return; }
+  const r = await api('/api/payments', {method:'POST', body:JSON.stringify(body)});
+  if(r?.ok) {
+    closeOverlay('overlayAddPayment');
+    await loadProjects();
+    await loadDashboard();
+    // בדוק אם הפרויקט הושלם לחלוטין
+    const proj = await api('/api/projects?page=1');
+    const p = proj?.projects?.find(x => x.id === parseInt(document.getElementById('payProjId').value));
+    if(p && p.collection_pct >= 100) {
+      toast('🎉 מזל טוב! הפרויקט שולם במלואו!');
+      launchConfetti();
+    } else {
+      toast('✅ תשלום נרשם בהצלחה');
+    }
+  }
+}
+
+async function submitClient() {
+  const body = {
+    name: document.getElementById('clientName').value.trim(),
+    phone: document.getElementById('clientPhone').value.trim(),
+    notes: document.getElementById('clientNotes').value.trim(),
+  };
+  if(!body.name) { toast('⚠️ יש להזין שם'); return; }
+  const r = await api('/api/clients', {method:'POST', body:JSON.stringify(body)});
+  if(r?.ok) { toast('✅ לקוח נשמר'); closeOverlay('overlayAddClient'); loadClients(); }
+}
+
+async function submitRecurring() {
+  const body = {
+    name: document.getElementById('recName').value.trim(),
+    amount: parseFloat(document.getElementById('recAmount').value)||0,
+    currency: recCur,
+    frequency: document.getElementById('recFreq').value,
+  };
+  if(!body.name || !body.amount) { toast('⚠️ יש למלא שם וסכום'); return; }
+  const r = await api('/api/recurring', {method:'POST', body:JSON.stringify(body)});
+  if(r?.ok) { toast('✅ הוצאה נשמרה'); closeOverlay('overlayAddRecurring'); loadRecurring(); }
+}
+
+async function submitGoal() {
+  const body = { amount: parseFloat(document.getElementById('goalAmount').value)||0, currency: goalCur };
+  if(!body.amount) { toast('⚠️ יש להזין סכום'); return; }
+  const r = await api('/api/goal', {method:'POST', body:JSON.stringify(body)});
+  if(r?.ok) { toast('✅ יעד נקבע'); closeOverlay('overlayGoal'); loadDashboard(); }
+}
+
+// ─────────────────────────────────────────────
+//  Delete helpers
+// ─────────────────────────────────────────────
+function openAddClient() { openOverlay('overlayAddClient') }
+
+// ─────────────────────────────────────────────
+//  Edit Client
+// ─────────────────────────────────────────────
+function openEditClient(id, name, phone, notes, status) {
+  document.getElementById('editClientId').value = id;
+  document.getElementById('editClientName').value = name;
+  document.getElementById('editClientPhone').value = phone;
+  document.getElementById('editClientNotes').value = notes;
+  document.getElementById('editClientStatus').value = status;
+  openOverlay('overlayEditClient');
+}
+
+async function submitEditClient() {
+  const id = parseInt(document.getElementById('editClientId').value);
+  const body = {
+    name: document.getElementById('editClientName').value.trim(),
+    phone: document.getElementById('editClientPhone').value.trim(),
+    notes: document.getElementById('editClientNotes').value.trim(),
+    status: document.getElementById('editClientStatus').value,
+  };
+  if(!body.name) { toast('⚠️ יש להזין שם'); return; }
+  const r = await api(`/api/clients/${id}`, {method:'PUT', body:JSON.stringify(body)});
+  if(r?.ok) {
+    toast('✅ לקוח עודכן בהצלחה');
+    closeOverlay('overlayEditClient');
+    loadClients();
+  }
+}
+
+// ─────────────────────────────────────────────
+//  Edit Project
+// ─────────────────────────────────────────────
+let editCat = 'bot', editCur = 'USD';
+
+function setEditCat(c) {
+  editCat = c;
+  document.getElementById('ecat-bot').classList.toggle('active', c==='bot');
+  document.getElementById('ecat-group').classList.toggle('active', c==='group');
+  document.getElementById('editNameLabel').textContent = c==='bot' ? '✏️ שם הבוט' : '✏️ שם הקבוצה';
+}
+
+function setEditCur(c) {
+  editCur = c;
+  document.getElementById('ecur-usd').classList.toggle('active', c==='USD');
+  document.getElementById('ecur-ils').classList.toggle('active', c==='ILS');
+}
+
+async function openEditProject(id) {
+  // טען פרויקט בודד
+  const [p, clients] = await Promise.all([
+    api(`/api/projects/${id}`),
+    api('/api/clients')
+  ]);
+  if(!p) { toast('⚠️ לא נמצא הפרויקט'); return; }
+
+  document.getElementById('editProjId').value = id;
+  document.getElementById('editProjName').value = p.name;
+  document.getElementById('editProjCost').value = p.cost_usd;
+  document.getElementById('editProjRevTotal').value = p.revenue_total_usd;
+  document.getElementById('editProjStatus').value = p.status;
+  document.getElementById('editProjDeadline').value = p.deadline ? p.deadline.split('T')[0] : '';
+  document.getElementById('editProjNotes').value = p.notes || '';
+
+  setEditCat(p.category);
+  setEditCur('USD');
+
+  const sel = document.getElementById('editProjClient');
+  sel.innerHTML = '<option value="">ללא לקוח</option>' + (clients?.clients||[]).map(c=>`<option value="${c.id}" ${c.id===p.client_id?'selected':''}>${c.name}</option>`).join('');
+
+  openOverlay('overlayEditProject');
+}
+
+async function submitEditProject() {
+  const id = parseInt(document.getElementById('editProjId').value);
+  const rate = currentRate;
+  const factor = editCur === 'USD' ? 1 : 1/rate;
+
+  const cost = parseFloat(document.getElementById('editProjCost').value)||0;
+  const revTotal = parseFloat(document.getElementById('editProjRevTotal').value)||0;
+  const clientVal = document.getElementById('editProjClient').value;
+
+  const body = {
+    name: document.getElementById('editProjName').value.trim(),
+    category: editCat,
+    client_id: clientVal ? parseInt(clientVal) : null,
+    cost_usd: parseFloat((cost * factor).toFixed(2)),
+    revenue_total_usd: parseFloat((revTotal * factor).toFixed(2)),
+    status: document.getElementById('editProjStatus').value,
+    deadline: document.getElementById('editProjDeadline').value || null,
+  };
+
+  if(!body.name) { toast('⚠️ יש להזין שם'); return; }
+
+  const r = await api(`/api/projects/${id}`, {method:'PUT', body:JSON.stringify(body)});
+  if(r?.ok) {
+    toast('✅ פרויקט עודכן בהצלחה');
+    closeOverlay('overlayEditProject');
+    loadProjects();
+  }
+}
+function openAddRecurring() { openOverlay('overlayAddRecurring') }
+
+async function deleteRecurring(id) {
+  const r = await api(`/api/recurring/${id}`, {method:'DELETE'});
+  if(r?.ok) { toast('🗑️ נמחק'); loadRecurring(); }
+}
+
+let pendingDelete = null;
+function confirmDelete(type, id, name) {
+  pendingDelete = {type, id};
+  document.getElementById('confirmText').textContent = `למחוק את "${name}"? לא ניתן לבטל פעולה זו.`;
+  document.getElementById('confirmOk').onclick = executePendingDelete;
+  document.getElementById('confirmModal').classList.add('open');
+}
+function closeModal() { document.getElementById('confirmModal').classList.remove('open'); pendingDelete=null; }
+async function executePendingDelete() {
+  if(!pendingDelete) return;
+  const {type, id} = pendingDelete;
+  let r;
+  if(type==='project') r = await api(`/api/projects/${id}`, {method:'DELETE'});
+  closeModal();
+  if(r?.ok) { toast('🗑️ נמחק בהצלחה'); loadProjects(); }
+}
+
+// ─────────────────────────────────────────────
+//  Init
+// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────
+//  AI Advisor
+// ─────────────────────────────────────────────
+let aiHistory = [];
+
+async function buildContext() {
+  const [dash, projects, clients, recurring] = await Promise.all([
+    api('/api/dashboard'),
+    api('/api/projects'),
+    api('/api/recurring'),
+    api('/api/clients'),
+  ]);
+  if(!dash) return '';
+  const r = currentRate;
+  const ctx = `
+אתה יועץ עסקי מומחה לשוק הבוטים והאוטומציה בטלגרם. אתה מדבר עברית בלבד.
+אתה מקבל נתונים אמיתיים של המשתמש ועונה תשובות ספציפיות, מעשיות ומדויקות.
+אל תהיה גנרי — התייחס למספרים האמיתיים.
+
+📊 נתוני המשתמש:
+- רווח החודש: $${fmtNum(dash.month_profit||0)}
+- תחזית סוף חודש: $${fmtNum(dash.forecast||0)}
+- יעד חודשי: ${dash.goal ? '$'+fmtNum(dash.goal.target||0) : 'לא הוגדר'}
+- התקדמות ליעד: ${dash.goal?.pct || 0}%
+- ממוצע חודשי: $${fmtNum(dash.avg_monthly||0)}
+- אחוז גבייה: ${dash.collection_rate}%
+- סה״כ ממתין לגבייה: $${fmtNum(dash.outstanding||0)}
+- מספר פרויקטים: ${dash.total_projects}
+- טופ 3 ROI: ${dash.top3_roi?.map(p => p.name+' ('+p.roi+'%)').join(', ')}
+- פרויקט הכוכב: ${dash.star?.name || 'אין'} עם ROI ${dash.star?.roi || 0}%
+- הוצאות קבועות חודשיות: $${recurring?.monthly_total_usd || 0}
+- מספר לקוחות: ${clients?.clients?.length || 0}
+
+ענה בצורה ברורה, קצרה ומעשית. השתמש בנקודות ובאמוג'ים להבהרה.
+`;
+  return ctx;
+}
+
+function addMsg(text, isUser) {
+  const div = document.getElementById('aiMessages');
+  const msg = document.createElement('div');
+  msg.className = 'ai-msg ' + (isUser ? 'ai-user' : 'ai-bot');
+  msg.innerHTML = text.split('\n').join('<br>');
+  div.appendChild(msg);
+  div.scrollTop = div.scrollHeight;
+}
+
+function showLoading() {
+  const div = document.getElementById('aiMessages');
+  const loader = document.createElement('div');
+  loader.className = 'ai-bot ai-loading';
+  loader.id = 'aiLoader';
+  loader.innerHTML = '<div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div>';
+  div.appendChild(loader);
+  div.scrollTop = div.scrollHeight;
+}
+
+function hideLoading() {
+  document.getElementById('aiLoader')?.remove();
+}
+
+async function askAI(question) {
+  document.getElementById('aiInput').value = '';
+  addMsg(question, true);
+  showLoading();
+
+  const context = await buildContext();
+  aiHistory.push({role:'user', content: question});
+
+  try {
+    const response = await fetch(API + '/api/ai', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        system: context,
+        messages: aiHistory
+      })
+    });
+    const data = await response.json();
+    const reply = data.content?.[0]?.text || 'לא הצלחתי לענות, נסה שוב';
+    hideLoading();
+    addMsg(reply, false);
+    aiHistory.push({role:'assistant', content: reply});
+    if(aiHistory.length > 20) aiHistory = aiHistory.slice(-20);
+  } catch(e) {
+    hideLoading();
+    addMsg('⚠️ שגיאת חיבור ל-AI', false);
+  }
+}
+
+async function sendAI() {
+  const input = document.getElementById('aiInput');
+  const q = input.value.trim();
+  if(!q) return;
+  input.value = '';
+  await askAI(q);
+}
+
+// ─────────────────────────────────────────────
+//  AI Tips — טיפים אוטומטיים בדשבורד
+// ─────────────────────────────────────────────
+let tipInterval = null;
+let tipCountdown = 120;
+let lastDashData = null;
+
+const generalTips = [
+  'תמחר לפי ערך ולא רק לפי זמן — בוט שחוסך ללקוח 10 שעות בשבוע שווה הרבה יותר מעלות הפיתוח שלו.',
+  'גבה מקדמה של 30-50% לפני תחילת כל פרויקט — זה מסנן לקוחות לא רציניים ומגן עליך.',
+  'ROI מעל 200% הוא יעד בריא לפרויקטי בוטים — מתחת ל-100% כדאי לבחון את המחיר.',
+  'לקוח שמשלם בזמן שווה יותר מלקוח שמשלם יותר — כלול בחישוב ה-ROI גם את זמן הגבייה.',
+  'הוצאות קבועות מעל 20% מההכנסות — שלב בהן, בטל שירותים שאינך משתמש בהם.',
+  'תמחור שעתי נמוך מ-$50 לשעה לבוטים? כדאי לשקול מעבר לתמחור פרויקטלי.',
+  'בוטים עם מנוי חודשי יציבים יותר כלכלית — שקול להמיר פרויקטים חד פעמיים לתחזוקה חודשית.',
+  'הצע חבילות: בסיס / פרו / פרמיום — לקוחות קונים את האמצעי ב-70% מהמקרים.',
+  'עדכן לקוחות אוטומטית על התקדמות — זה מצדיק מחירים גבוהים יותר ומפחית חרטות.',
+  'שמור תיעוד של כל פרויקט — זה מאיץ פרויקטים עתידיים ומגדיל את הרווחיות.',
+];
+
+async function fetchAITip(dashData) {
+  if(!dashData) return null;
+  const ctx = await buildContext();
+  const prompt = dashData.total_projects > 2
+    ? 'תן לי טיפ עסקי אחד קצר וספציפי (2-3 משפטים) מותאם לנתונים שלי. התמקד בפעולה אחת שאני יכול לעשות עכשיו.'
+    : 'תן לי טיפ עסקי כללי אחד קצר (2-3 משפטים) לניהול פרויקטי בוטים וטלגרם.';
+
+  try {
+    const response = await fetch(API + '/api/ai', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        system: ctx,
+        messages: [{role: 'user', content: prompt}]
+      })
+    });
+    const data = await response.json();
+    return data.content?.[0]?.text || null;
+  } catch(e) {
+    return null;
+  }
+}
+
+async function loadNextTip() {
+  const el = document.getElementById('aiTipContent');
+  if(!el) return;
+
+  // הצג loading
+  el.innerHTML = '<div style="display:flex;gap:4px;align-items:center;padding:8px 0"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div></div>';
+
+  // נסה AI טיפ, fallback לטיפ כללי
+  let tip = await fetchAITip(lastDashData);
+  if(!tip) {
+    tip = generalTips[Math.floor(Math.random() * generalTips.length)];
+  }
+
+  el.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+  el.style.opacity = '0';
+  el.style.transform = 'translateY(8px)';
+  setTimeout(() => {
+    el.innerHTML = tip;
+    el.style.opacity = '1';
+    el.style.transform = 'translateY(0)';
+  }, 400);
+
+  // איפוס countdown
+  tipCountdown = 120;
+}
+
+function startTipTimer() {
+  if(tipInterval) clearInterval(tipInterval);
+  tipInterval = setInterval(async () => {
+    tipCountdown--;
+    if(tipCountdown <= 0) {
+      await loadNextTip();
+      tipCountdown = 120;
+    }
+  }, 1000);
+}
+
+function launchConfetti() {
+  const colors = ['#5b6ef5','#3dd68c','#f5c842','#f55b5b','#7c5cbf','#f5a442'];
+  for(let i=0;i<80;i++){
+    const el = document.createElement('div');
+    el.style.cssText = `position:fixed;width:${4+Math.random()*6}px;height:${4+Math.random()*6}px;background:${colors[Math.floor(Math.random()*colors.length)]};border-radius:50%;top:-10px;left:${Math.random()*100}vw;z-index:9999;pointer-events:none;animation:fall ${1.5+Math.random()*2}s ease-in forwards`;
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(), 4000);
+  }
+  if(!document.getElementById('confettiStyle')){
+    const s=document.createElement('style');
+    s.id='confettiStyle';
+    s.textContent='@keyframes fall{to{transform:translateY(110vh) rotate(720deg);opacity:0}}';
+    document.head.appendChild(s);
+  }
+}
+
+// ─────────────────────────────────────────────
+//  Dark Mode
+// ─────────────────────────────────────────────
+let isDark = false;
+
+function applyDark(dark) {
+  isDark = dark;
+  document.body.classList.toggle('dark-mode', dark);
+  const btn = document.getElementById('darkToggle');
+  if(btn) {
+    btn.textContent = dark ? '☀️' : '🌙';
+    btn.style.background = dark ? 'var(--surface3)' : 'var(--surface2)';
+    btn.style.borderColor = dark ? 'var(--border2)' : 'var(--border2)';
+  }
+  localStorage.setItem('darkMode', dark ? '1' : '0');
+}
+
+function toggleDark() {
+  applyDark(!isDark);
+}
+
+function checkAutoNightMode() {
+  const h = new Date().getHours();
+  const isNight = h >= 19 || h < 7;
+  const saved = localStorage.getItem('darkMode');
+  // אם המשתמש לא שינה ידנית — החל אוטו
+  if(saved === null) {
+    applyDark(isNight);
+  } else {
+    applyDark(saved === '1');
+  }
+}
+
+// בדוק מחדש כל דקה אם צריך לעבור מצב
+setInterval(() => {
+  const saved = localStorage.getItem('darkMode');
+  if(saved === null) {
+    const h = new Date().getHours();
+    applyDark(h >= 19 || h < 7);
+  }
+}, 60000);
+
+async function init() {
+  // אתחל indicator
+  setTimeout(() => updateNavIndicator('home'), 100);
+  // קרא שם מטלגרם WebApp
+  const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+  const greetEl = document.getElementById('greetingText');
+  if(greetEl) {
+    const hour = new Date().getHours();
+    const greeting = hour < 12 ? 'בוקר טוב' : hour < 17 ? 'צהריים טובים' : hour < 21 ? 'ערב טוב' : 'לילה טוב';
+    const name = tgUser?.first_name || '';
+    greetEl.textContent = name ? greeting + ', ' + name + ' 👋' : greeting + ' 👋';
+  }
+  await loadRate();
+  loadDashboard();
+}
+init();
+</script>
+</body>
+</html>
